@@ -40,6 +40,7 @@ class OpenFlight:
     
     def _check_header(self, fileName):
         recognisableRecordTypes = [0x01]
+        recognisableRecordSizes = [324]
         if self.f is None:
             self.f = open(fileName, 'rb')
         # Ensure we're at the start of the file
@@ -56,7 +57,7 @@ class OpenFlight:
         print "\rDetermining record length... ",
         recordLength = struct.unpack('>H', self.f.read(2))[0]
         
-        if recordLength != 324:
+        if recordLength != recognisableRecordSizes[recognised.index(True)]:
             raise Exception("Unexpected record length.")
         
         print "\rReading record name... ",
