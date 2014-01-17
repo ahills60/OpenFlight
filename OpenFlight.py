@@ -1,4 +1,5 @@
 import os, struct
+import numpy as np
 
 class OpenFlight:
     """The OpenFlight is a base class that is capable of opening
@@ -32,6 +33,121 @@ class OpenFlight:
         self.DBName = ""
         self.PrimaryNodeID = dict()
         self.Settings = dict()
+        self._LastPlace = None
+        
+        self._OpCodes = {   1:    self._opHeader,
+                            2:    self._opGroup,
+                            4:    self._opObject,
+                            5:    self._opFace,
+                           10:    self._opPush,
+                           11:    self._opPop,
+                           14:    self._opDoF,
+                           19:    self._opPushSubface,
+                           20:    self._opPopSubface,
+                           21:    self._opPushExtension,
+                           22:    self._opPupExtension,
+                           23:    self._opContinuation,
+                           31:    self._opComment,
+                           32:    self._opColourPalette,
+                           33:    self._opLongID,
+                           49:    self._opMatrix,
+                           50:    self._opVector,
+                           52:    self._opMultitexture,
+                           53:    self._opUVList,
+                           55:    self._opBSP,
+                           60:    self._opReplicate,
+                           61:    self._opInstRef,
+                           62:    self._opInstDef,
+                           63:    self._opExtRef,
+                           64:    self._opTexturePalette,
+                           67:    self._opVertexPalette,
+                           68:    self._opVertexColour,
+                           69:    self._opVertexColNorm,
+                           70:    self._opVertexColNormUV,
+                           71:    self._opVertexColUV,
+                           72:    self._opVertexList,
+                           73:    self._opLoD,
+                           74:    self._opBoundingBox,
+                           76:    self._opRotEdge,
+                           78:    self._opTranslate,
+                           79:    self._opScale,
+                           80:    self._opRotPoint,
+                           81:    self._opRotScPoint,
+                           82:    self._opPut,
+                           83:    self._opEyeTrackPalette,
+                           84:    self._opMesh,
+                           85:    self._opLocVertexPool,
+                           86:    self._opMeshPrim,
+                           87:    self._opRoadSeg,
+                           88:    self._opRoadZone,
+                           89:    self._opMorphVertex,
+                           90:    self._opLinkPalette,
+                           91:    self._opSound,
+                           92:    self._opRoadPath,
+                           93:    self._opSoundPalette,
+                           94:    self._opGenMatrix,
+                           95:    self._opText,
+                           96:    self._opSwitch,
+                           97:    self._opLineStylePalette,
+                           98:    self._opClipRegion,
+                          100:    self._opExtension,
+                          101:    self._opLightSrc,
+                          102:    self._opLightSrcPalette,
+                          103:    self._opReserved,
+                          104:    self._opReserved,
+                          105:    self._opBoundSphere,
+                          106:    self._opBoundCylinder,
+                          107:    self._opBoundConvexHull,
+                          108:    self._opBoundVolCentre,
+                          109:    self._opBoundVolOrientation,
+                          110:    self._opReserved,
+                          111:    self._opLightPt,
+                          112:    self._opTextureMapPalette,
+                          113:    self._opMatPalette,
+                          114:    self._opNameTable,
+                          115:    self._opCAT,
+                          116:    self._opCATData,
+                          117:    self._opReserved,
+                          118:    self._opReserved,
+                          119:    self._opBoundHist,
+                          120:    self._opReserved,
+                          121:    self._opReserved,
+                          122:    self._opPushAttr,
+                          123:    self._opPopAttr,
+                          124:    self._opReserved,
+                          125:    self._opReserved,
+                          126:    self._opCurve,
+                          127:    self._opRoadConstruc,
+                          128:    self._opLightPtAppearPalette,
+                          129:    self._opLightPtAnimatPalette,
+                          130:    self._opIdxLightPt,
+                          131:    self._opLightPtSys,
+                          132:    self._opIdxStr,
+                          133:    self._opShaderPalette,
+                          134:    self._opReserved,
+                          135:    self._opExtMatHdr,
+                          136:    self._opExtMatAmb,
+                          137:    self._opExtMatDif,
+                          138:    self._opExtMatSpc,
+                          139:    self._opExtMatEms,
+                          140:    self._opExtMatAlp,
+                          141:    self._opExtMatLightMap,
+                          142:    self._opExtMatNormMap,
+                          143:    self._opExtMatBumpMap,
+                          144:    self._opReserved,
+                          145:    self._opExtMatShadowMap,
+                          146:    self._opReserved,
+                          147:    self._opExtMatReflMap,
+                          148:    self._opExtGUIDPalette,
+                          149:    self._opExtFieldBool,
+                          150:    self._opExtFieldInt,
+                          151:    self._opExtFieldFloat,
+                          152:    self._opExtFieldDouble,
+                          153:    self._opExtFieldString,
+                          154:    self._opExtFieldXMLString}
+        self._ObsoleteOpCodes = [3, 6, 7, 8, 9, 12, 13, 16, 17, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 65, 66, 77]
+        
+        self.Records = dict()
     
     def _check_filesize(self, fileName):
         fileSize = os.stat(fileName).st_size
@@ -101,7 +217,7 @@ class OpenFlight:
         
         print "\rExtracting scene settings... ",
         
-        iRead = struct.unpack('>b', self.f.read(1))[0]
+        iRead = struct.unpack('>B', self.f.read(1))[0]
         
         Coords = {0: 'm', 1: 'km', 4: 'ft', 5: 'in', 8: 'nmi'}
         
@@ -233,6 +349,7 @@ class OpenFlight:
         try:
             for funcIdx, func in enumerate(self._Checks):
                 checkList[funcIdx] = func(fileName)
+            self._LastPlace = self.f.tell()
         except BaseException, e:
             print("An error occurred when calling " + str(func) + ".")
             print(str(e))
@@ -251,3 +368,529 @@ class OpenFlight:
         else:
             print "\nThis file conforms to OpenFlight standards\n"
             return True
+    
+    def ReadFile(self, fileName = None):
+        # Number of checks to perform        
+        if fileName is None:
+            if self.fileName is None:
+                raise IOError('No filename specified.')
+            fileName = self.fileName
+        
+        if not os.path.exists(fileName):
+            raise IOError('Could not find file.')
+        
+        if self._LastPlace is None:
+            if not self.isOpenFlight(fileName):
+                raise Exception("Unable to continue. File does not conform to OpenFlight standards.")
+        
+        if self.f is None:
+            self.f = open(fileName, 'rb')
+        
+        # We can skip past the header and start reading stuff...
+        self.f.seek(self._LastPlace)
+        
+        print "Reading OpenFlight file..."
+        
+        try:
+            while True:
+                iRead = self.f.read(2)
+                if iRead == '':
+                    break
+                # There's some data.
+                iRead = struct.unpack('>h', iRead)[0]
+                print "Opcode read:", str(iRead)
+                if iRead in self._ObsoleteOpCodes:
+                    raise Exception("Unable to continue. File uses obsolete codes.")
+                if iRead not in self._OpCodes:
+                    raise Exception("Unable to continue OpenFlight Opcode not recognised.")
+                # If here, there's a code that can be run.
+                self._OpCodes[iRead](fileName)
+        except BaseException, e:
+            print("An error occurred when calling Opcode " + str(iRead) + ".")
+            print(str(e))
+            self.e = e
+        finally:
+            # Close nicely.
+            if self.f is not None:
+                self.f.close()
+                self.f = None
+    
+    def _opReserved(self, fileName = None):
+        pass
+    
+    def _opHeader(self, fileName = None):
+        raise Exception("Another header found in file.")
+    
+    def _opGroup(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        if RecordLength != 44:
+            raise Exception("Unexpected group record length.")
+        if "Group" not in self.Records:
+            self.Records["Group"] = dict()
+        
+        # Get ASCII ID
+        ASCID = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        if ASCID in self.Records["Group"]:
+            n = 1
+            while ASCID + " " + str(n) in self.Records["Group"]:
+                n += 1
+            ASCID += " " + str(n)
+        print "\tGroup", ASCID, "Created"
+        self.Records["Group"][ASCID] = dict()
+        
+        self.Records["Group"][ASCID]['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
+        
+        # Skip some reserved spot
+        self.f.seek(2, os.SEEK_CUR)
+        
+        self.Records["Group"][ASCID]['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        self.Records["Group"][ASCID]['FXID1'] = struct.unpack('>h', self.f.read(2))[0]
+        self.Records["Group"][ASCID]['FXID2'] = struct.unpack('>h', self.f.read(2))[0]
+        self.Records["Group"][ASCID]['Significance'] = struct.unpack('>h', self.f.read(2))[0]
+        self.Records["Group"][ASCID]['LayerCode'] = struct.unpack('>B', self.f.read(1))[0]
+        
+        self.f.seek(5, os.SEEK_CUR)
+        self.Records["Group"][ASCID]['LoopCount'] = struct.unpack('>I', self.f.read(4))[0]
+        self.Records["Group"][ASCID]['LoopDuration'] = struct.unpack('>f', self.f.read(4))[0]
+        self.Records["Group"][ASCID]['LastFrameDuration'] = struct.unpack('>f', self.f.read(4))[0]
+    
+    def _opObject(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        if RecordLength != 28:
+            raise Exception("Unexpected object record length.")
+        if "Object" not in self.Records:
+            self.Records["Object"] = dict()
+        # Get ASCII ID
+        ASCID = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        if ASCID in self.Records["Object"]:
+            n = 1
+            while ASCID + " " + str(n) in self.Records["Object"]:
+                n += 1
+            ASCID += " " + str(n)
+        print "\tObject", ASCID, "Created"
+        self.Records["Object"][ASCID] = dict()
+        
+        self.Records["Object"][ASCID]['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        self.Records["Object"][ASCID]['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
+        self.Records["Object"][ASCID]['Transparency'] = struct.unpack('>H', self.f.read(2))[0]
+        self.Records["Object"][ASCID]['FXID1'] = struct.unpack('>h', self.f.read(2))[0]
+        self.Records["Object"][ASCID]['FXID2'] = struct.unpack('>h', self.f.read(2))[0]
+        self.Records["Object"][ASCID]['Significance'] = struct.unpack('>h', self.f.read(2))[0]
+        self.f.seek(2, os.SEEK_CUR)
+    
+    def _opFace(self, fileName = None):
+        pass
+    
+    
+    def _opPush(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        if RecordLength != 4:
+            raise Exception("Unexpected push level record length.")
+    
+    
+    def _opPop(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        if RecordLength != 4:
+            raise Exception("Unexpected pop level record length.")
+    
+    def _opDoF(self, fileName = None):
+        pass
+    
+    def _opPushSubface(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        if RecordLength != 4:
+            raise Exception("Unexpected push subface record length.")
+    
+    def _opPopSubface(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        if RecordLength != 4:
+            raise Exception("Unexpected pop subface record length.")
+    
+    def _opPushExtension(self, fileName = None):
+        pass
+    
+    
+    def _opPupExtension(self, fileName = None):
+        pass
+    
+    
+    def _opContinuation(self, fileName = None):
+        pass
+    
+    
+    def _opComment(self, fileName = None):
+        pass
+    
+    
+    def _opColourPalette(self, fileName = None):
+        pass
+    
+    
+    def _opLongID(self, fileName = None):
+        pass
+    
+    
+    def _opMatrix(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        print str(RecordLength)
+        if RecordLength != 68:
+            raise Exception("Unexpected matrix record length.")
+        if "Matrix" not in self.Records:
+            self.Records["Matrix"] = dict()
+        name = 'Matrix'
+        if name in self.Records["Matrix"]:
+            n = 1
+            while name + " " + str(n) in self.Records["Matrix"]:
+                n += 1
+            name += " " + str(n)
+        print "\tMatrix", name, "Created"
+        
+        self.Records["Matrix"][name] = np.zeros((4, 4))
+        for n in range(16):
+            # Enter elements of a matrix by going across their columns
+            self.Records["Matrix"][name][int(n) / 4, n % 4] = struct.unpack('>f', self.f.read(4))[0]
+    
+    def _opVector(self, fileName = None):
+        pass
+    
+    
+    def _opMultitexture(self, fileName = None):
+        pass
+    
+    
+    def _opUVList(self, fileName = None):
+        pass
+    
+    
+    def _opBSP(self, fileName = None):
+        pass
+    
+    
+    def _opReplicate(self, fileName = None):
+        pass
+    
+    
+    def _opInstRef(self, fileName = None):
+        pass
+    
+    
+    def _opInstDef(self, fileName = None):
+        pass
+    
+    
+    def _opExtRef(self, fileName = None):
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        if RecordLength != 216:
+            raise Exception("Unexpected External Reference record length.")
+        if "ExtRef" not in self.Records:
+            self.Records["ExtRef"] = dict()
+        
+        # Get ASCII path
+        ASCIIPath = struct.unpack('>200s', self.f.read(200))[0].replace('\x00', '')
+        if ASCIIPath in self.Records["ExtRef"]:
+            n = 1
+            while ASCIIPath + " " + str(n) in self.Records["ExtRef"]:
+                n += 1
+            ASCIIPath += " " + str(n)
+        print "\tExternal reference to", ASCIIPath, "Created"
+        self.Records["ExtRef"][ASCIIPath] = dict()
+        
+        self.f.seek(4, os.SEEK_CUR)
+        self.Records["ExtRef"][ASCIIPath]["Flags"] = struct.unpack('>I', self.f.read(4))[0]
+        self.Records["ExtRef"][ASCIIPath]["BoundingBox"] = struct.unpack(">H", self.f.read(2))[0]
+        self.f.seek(2, os.SEEK_CUR)
+    
+    def _opTexturePalette(self, fileName = None):
+        pass
+    
+    
+    def _opVertexPalette(self, fileName = None):
+        pass
+    
+    
+    def _opVertexColour(self, fileName = None):
+        pass
+    
+    
+    def _opVertexColNorm(self, fileName = None):
+        pass
+    
+    
+    def _opVertexColNormUV(self, fileName = None):
+        pass
+    
+    
+    def _opVertexColUV(self, fileName = None):
+        pass
+    
+    
+    def _opVertexList(self, fileName = None):
+        pass
+    
+    
+    def _opLoD(self, fileName = None):
+        pass
+    
+    
+    def _opBoundingBox(self, fileName = None):
+        pass
+    
+    
+    def _opRotEdge(self, fileName = None):
+        pass
+    
+    
+    def _opTranslate(self, fileName = None):
+        pass
+    
+    
+    def _opScale(self, fileName = None):
+        pass
+    
+    
+    def _opRotPoint(self, fileName = None):
+        pass
+    
+    
+    def _opRotScPoint(self, fileName = None):
+        pass
+    
+    
+    def _opPut(self, fileName = None):
+        pass
+    
+    
+    def _opEyeTrackPalette(self, fileName = None):
+        pass
+    
+    
+    def _opMesh(self, fileName = None):
+        pass
+    
+    
+    def _opLocVertexPool(self, fileName = None):
+        pass
+    
+    
+    def _opMeshPrim(self, fileName = None):
+        pass
+    
+    
+    def _opRoadSeg(self, fileName = None):
+        pass
+    
+    
+    def _opRoadZone(self, fileName = None):
+        pass
+    
+    
+    def _opMorphVertex(self, fileName = None):
+        pass
+    
+    
+    def _opLinkPalette(self, fileName = None):
+        pass
+    
+    
+    def _opSound(self, fileName = None):
+        pass
+    
+    
+    def _opRoadPath(self, fileName = None):
+        pass
+    
+    
+    def _opSoundPalette(self, fileName = None):
+        pass
+    
+    
+    def _opGenMatrix(self, fileName = None):
+        pass
+    
+    
+    def _opText(self, fileName = None):
+        pass
+    
+    
+    def _opSwitch(self, fileName = None):
+        pass
+    
+    
+    def _opLineStylePalette(self, fileName = None):
+        pass
+    
+    
+    def _opClipRegion(self, fileName = None):
+        pass
+    
+    
+    def _opExtension(self, fileName = None):
+        pass
+    
+    
+    def _opLightSrc(self, fileName = None):
+        pass
+    
+    
+    def _opLightSrcPalette(self, fileName = None):
+        pass
+    
+    
+    def _opBoundSphere(self, fileName = None):
+        pass
+    
+    
+    def _opBoundCylinder(self, fileName = None):
+        pass
+    
+    
+    def _opBoundConvexHull(self, fileName = None):
+        pass
+    
+    
+    def _opBoundVolCentre(self, fileName = None):
+        pass
+    
+    
+    def _opBoundVolOrientation(self, fileName = None):
+        pass
+    
+    def _opLightPt(self, fileName = None):
+        pass
+    
+    
+    def _opTextureMapPalette(self, fileName = None):
+        pass
+    
+    
+    def _opMatPalette(self, fileName = None):
+        pass
+    
+    
+    def _opNameTable(self, fileName = None):
+        pass
+    
+    
+    def _opCAT(self, fileName = None):
+        pass
+    
+    
+    def _opCATData(self, fileName = None):
+        pass
+    
+    
+    def _opBoundHist(self, fileName = None):
+        pass
+    
+    
+    def _opPushAttr(self, fileName = None):
+        pass
+    
+    
+    def _opPopAttr(self, fileName = None):
+        pass
+    
+    
+    def _opCurve(self, fileName = None):
+        pass
+    
+    
+    def _opRoadConstruc(self, fileName = None):
+        pass
+    
+    
+    def _opLightPtAppearPalette(self, fileName = None):
+        pass
+    
+    
+    def _opLightPtAnimatPalette(self, fileName = None):
+        pass
+    
+    
+    def _opIdxLightPt(self, fileName = None):
+        pass
+    
+    
+    def _opLightPtSys(self, fileName = None):
+        pass
+    
+    
+    def _opIdxStr(self, fileName = None):
+        pass
+    
+    
+    def _opShaderPalette(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatHdr(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatAmb(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatDif(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatSpc(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatEms(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatAlp(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatLightMap(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatNormMap(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatBumpMap(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatShadowMap(self, fileName = None):
+        pass
+    
+    
+    def _opExtMatReflMap(self, fileName = None):
+        pass
+    
+    
+    def _opExtGUIDPalette(self, fileName = None):
+        pass
+    
+    
+    def _opExtFieldBool(self, fileName = None):
+        pass
+    
+    
+    def _opExtFieldInt(self, fileName = None):
+        pass
+    
+    
+    def _opExtFieldFloat(self, fileName = None):
+        pass
+    
+    
+    def _opExtFieldDouble(self, fileName = None):
+        pass
+    
+    
+    def _opExtFieldString(self, fileName = None):
+        pass
+    
+    
+    def _opExtFieldXMLString(self, fileName = None):
+        pass
+    
