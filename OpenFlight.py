@@ -419,9 +419,11 @@ class OpenFlight:
         pass
     
     def _opHeader(self, fileName = None):
+        # Opcode 1
         raise Exception("Another header found in file.")
     
     def _opGroup(self, fileName = None):
+        # Opcode 2
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         if RecordLength != 44:
             raise Exception("Unexpected group record length.")
@@ -455,6 +457,7 @@ class OpenFlight:
         self.Records["Group"][ASCID]['LastFrameDuration'] = struct.unpack('>f', self.f.read(4))[0]
     
     def _opObject(self, fileName = None):
+        # Opcode 4
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         if RecordLength != 28:
             raise Exception("Unexpected object record length.")
@@ -479,58 +482,71 @@ class OpenFlight:
         self.f.seek(2, os.SEEK_CUR)
     
     def _opFace(self, fileName = None):
+        # Opcode 5
         pass
     
     
     def _opPush(self, fileName = None):
+        # Opcode 10
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         if RecordLength != 4:
             raise Exception("Unexpected push level record length.")
     
     
     def _opPop(self, fileName = None):
+        # Opcode 11
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         if RecordLength != 4:
             raise Exception("Unexpected pop level record length.")
     
     def _opDoF(self, fileName = None):
+        # Opcode 14
         pass
     
     def _opPushSubface(self, fileName = None):
+        # Opcode 19
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         if RecordLength != 4:
             raise Exception("Unexpected push subface record length.")
     
     def _opPopSubface(self, fileName = None):
+        # Opcode 20
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         if RecordLength != 4:
             raise Exception("Unexpected pop subface record length.")
     
     def _opPushExtension(self, fileName = None):
+        # Opcode 21
         pass
     
     
     def _opPupExtension(self, fileName = None):
+        # Opcode 22
         pass
     
     
     def _opContinuation(self, fileName = None):
+        # Opcode 23
         pass
     
     
     def _opComment(self, fileName = None):
+        # Opcode 31
         pass
     
     
     def _opColourPalette(self, fileName = None):
+        # Opcode 32
         pass
     
     
     def _opLongID(self, fileName = None):
+        # Opcode 33
         pass
     
     
     def _opMatrix(self, fileName = None):
+        # Opcode 49
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         print str(RecordLength)
         if RecordLength != 68:
@@ -551,34 +567,42 @@ class OpenFlight:
             self.Records["Matrix"][name][int(n) / 4, n % 4] = struct.unpack('>f', self.f.read(4))[0]
     
     def _opVector(self, fileName = None):
+        # Opcode 50
         pass
     
     
     def _opMultitexture(self, fileName = None):
+        # Opcode 52
         pass
     
     
     def _opUVList(self, fileName = None):
+        # Opcode 53
         pass
     
     
     def _opBSP(self, fileName = None):
+        # Opcode 55
         pass
     
     
     def _opReplicate(self, fileName = None):
+        # Opcode 60
         pass
     
     
     def _opInstRef(self, fileName = None):
+        # Opcode 61
         pass
     
     
     def _opInstDef(self, fileName = None):
+        # Opcode 62
         pass
     
     
     def _opExtRef(self, fileName = None):
+        # Opcode 63
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         if RecordLength != 216:
             raise Exception("Unexpected External Reference record length.")
@@ -601,296 +625,370 @@ class OpenFlight:
         self.f.seek(2, os.SEEK_CUR)
     
     def _opTexturePalette(self, fileName = None):
+        # Opcode 64
         pass
     
     
     def _opVertexPalette(self, fileName = None):
+        # Opcode 67
         pass
     
     
     def _opVertexColour(self, fileName = None):
+        # Opcode 68
         pass
     
     
     def _opVertexColNorm(self, fileName = None):
+        # Opcode 69
         pass
     
     
     def _opVertexColNormUV(self, fileName = None):
+        # Opcode 70
         pass
     
     
     def _opVertexColUV(self, fileName = None):
+        # Opcode 71
         pass
     
     
     def _opVertexList(self, fileName = None):
+        # Opcode 72
         pass
     
     
     def _opLoD(self, fileName = None):
+        # Opcode 73
         pass
     
     
     def _opBoundingBox(self, fileName = None):
+        # Opcode 74
         pass
     
     
     def _opRotEdge(self, fileName = None):
+        # Opcode 76
         pass
     
     
     def _opTranslate(self, fileName = None):
+        # Opcode 78
         pass
     
     
     def _opScale(self, fileName = None):
+        # Opcode 79
         pass
     
     
     def _opRotPoint(self, fileName = None):
+        # Opcode 80
         pass
     
     
     def _opRotScPoint(self, fileName = None):
+        # Opcode 81
         pass
     
     
     def _opPut(self, fileName = None):
+        # Opcode 82
         pass
     
     
     def _opEyeTrackPalette(self, fileName = None):
+        # Opcode 83
         pass
     
     
     def _opMesh(self, fileName = None):
+        # Opcode 84
         pass
     
     
     def _opLocVertexPool(self, fileName = None):
+        # Opcode 85
         pass
     
     
     def _opMeshPrim(self, fileName = None):
+        # Opcode 86
         pass
     
     
     def _opRoadSeg(self, fileName = None):
+        # Opcode 87
         pass
     
     
     def _opRoadZone(self, fileName = None):
+        # Opcode 88
         pass
     
     
     def _opMorphVertex(self, fileName = None):
+        # Opcode 89
         pass
     
     
     def _opLinkPalette(self, fileName = None):
+        # Opcode 90
         pass
     
     
     def _opSound(self, fileName = None):
+        # Opcode 91
         pass
     
     
     def _opRoadPath(self, fileName = None):
+        # Opcode 92
         pass
     
     
     def _opSoundPalette(self, fileName = None):
+        # Opcode 93
         pass
     
     
     def _opGenMatrix(self, fileName = None):
+        # Opcode 94
         pass
     
     
     def _opText(self, fileName = None):
+        # Opcode 95
         pass
     
     
     def _opSwitch(self, fileName = None):
+        # Opcode 96
         pass
     
     
     def _opLineStylePalette(self, fileName = None):
+        # Opcode 97
         pass
     
     
     def _opClipRegion(self, fileName = None):
+        # Opcode 98
         pass
     
     
     def _opExtension(self, fileName = None):
+        # Opcode 100
         pass
     
     
     def _opLightSrc(self, fileName = None):
+        # Opcode 101
         pass
     
     
     def _opLightSrcPalette(self, fileName = None):
+        # Opcode 102
         pass
     
     
     def _opBoundSphere(self, fileName = None):
+        # Opcode 105
         pass
     
     
     def _opBoundCylinder(self, fileName = None):
+        # Opcode 106
         pass
     
     
     def _opBoundConvexHull(self, fileName = None):
+        # Opcode 107
         pass
     
     
     def _opBoundVolCentre(self, fileName = None):
+        # Opcode 108
         pass
     
     
     def _opBoundVolOrientation(self, fileName = None):
+        # Opcode 109
         pass
     
     def _opLightPt(self, fileName = None):
+        # Opcode 111
         pass
     
     
     def _opTextureMapPalette(self, fileName = None):
+        # Opcode 112
         pass
     
     
     def _opMatPalette(self, fileName = None):
+        # Opcode 113
         pass
     
     
     def _opNameTable(self, fileName = None):
+        # Opcode 114
         pass
     
     
     def _opCAT(self, fileName = None):
+        # Opcode 115
         pass
     
     
     def _opCATData(self, fileName = None):
+        # Opcode 116
         pass
     
     
     def _opBoundHist(self, fileName = None):
+        # Opcode 119
         pass
     
     
     def _opPushAttr(self, fileName = None):
+        # Opcode 122
         pass
     
     
     def _opPopAttr(self, fileName = None):
+        # Opcode 123
         pass
     
     
     def _opCurve(self, fileName = None):
+        # Opcode 126
         pass
     
     
     def _opRoadConstruc(self, fileName = None):
+        # Opcode 127
         pass
     
     
     def _opLightPtAppearPalette(self, fileName = None):
+        # Opcode 128
         pass
     
     
     def _opLightPtAnimatPalette(self, fileName = None):
+        # Opcode 129
         pass
     
     
     def _opIdxLightPt(self, fileName = None):
+        # Opcode 130
         pass
     
     
     def _opLightPtSys(self, fileName = None):
+        # Opcode 131
         pass
     
     
     def _opIdxStr(self, fileName = None):
+        # Opcode 132
         pass
     
     
     def _opShaderPalette(self, fileName = None):
+        # Opcode 133
         pass
     
     
     def _opExtMatHdr(self, fileName = None):
+        # Opcode 135
         pass
     
     
     def _opExtMatAmb(self, fileName = None):
+        # Opcode 136
         pass
     
     
     def _opExtMatDif(self, fileName = None):
+        # Opcode 137
         pass
     
     
     def _opExtMatSpc(self, fileName = None):
+        # Opcode 138
         pass
     
     
     def _opExtMatEms(self, fileName = None):
+        # Opcode 139
         pass
     
     
     def _opExtMatAlp(self, fileName = None):
+        # Opcode 140
         pass
     
     
     def _opExtMatLightMap(self, fileName = None):
+        # Opcode 141
         pass
     
     
     def _opExtMatNormMap(self, fileName = None):
+        # Opcode 142
         pass
     
     
     def _opExtMatBumpMap(self, fileName = None):
+        # Opcode 143
         pass
     
     
     def _opExtMatShadowMap(self, fileName = None):
+        # Opcode 145
         pass
     
     
     def _opExtMatReflMap(self, fileName = None):
+        # Opcode 147
         pass
     
     
     def _opExtGUIDPalette(self, fileName = None):
+        # Opcode 148
         pass
     
     
     def _opExtFieldBool(self, fileName = None):
+        # Opcode 149
         pass
     
     
     def _opExtFieldInt(self, fileName = None):
+        # Opcode 150
         pass
     
     
     def _opExtFieldFloat(self, fileName = None):
+        # Opcode 151
         pass
     
     
     def _opExtFieldDouble(self, fileName = None):
+        # Opcode 152
         pass
     
     
     def _opExtFieldString(self, fileName = None):
+        # Opcode 153
         pass
     
     
     def _opExtFieldXMLString(self, fileName = None):
+        # Opcode 154
         pass
     
