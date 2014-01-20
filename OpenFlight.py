@@ -687,7 +687,15 @@ class OpenFlight:
     
     def _opTexturePalette(self, fileName = None):
         # Opcode 64
-        pass
+        newObject = dict()
+        newObject['Datatype'] = "TexturePalette"
+        newObject['Filename'] = struct.unpack('>200s', self.f.read(200))[0].replace('\x00', '')
+        newObject['TexturePatternIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['LocationInTexturePalette'] = np.zeros((1, 2))
+        newObject['LocationInTexturePalette'][0, 0] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['LocationInTexturePalette'][0, 1] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opVertexPalette(self, fileName = None):
