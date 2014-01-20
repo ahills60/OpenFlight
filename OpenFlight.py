@@ -34,117 +34,117 @@ class OpenFlight:
         self.PrimaryNodeID = dict()
         self.Settings = dict()
         self._LastPlace = None
-        
-        self._OpCodes = {   1:    self._opHeader,
-                            2:    self._opGroup,
-                            4:    self._opObject,
-                            5:    self._opFace,
-                           10:    self._opPush,
-                           11:    self._opPop,
-                           14:    self._opDoF,
-                           19:    self._opPushSubface,
-                           20:    self._opPopSubface,
-                           21:    self._opPushExtension,
-                           22:    self._opPupExtension,
-                           23:    self._opContinuation,
-                           31:    self._opComment,
-                           32:    self._opColourPalette,
-                           33:    self._opLongID,
-                           49:    self._opMatrix,
-                           50:    self._opVector,
-                           52:    self._opMultitexture,
-                           53:    self._opUVList,
-                           55:    self._opBSP,
-                           60:    self._opReplicate,
-                           61:    self._opInstRef,
-                           62:    self._opInstDef,
-                           63:    self._opExtRef,
-                           64:    self._opTexturePalette,
-                           67:    self._opVertexPalette,
-                           68:    self._opVertexColour,
-                           69:    self._opVertexColNorm,
-                           70:    self._opVertexColNormUV,
-                           71:    self._opVertexColUV,
-                           72:    self._opVertexList,
-                           73:    self._opLoD,
-                           74:    self._opBoundingBox,
-                           76:    self._opRotEdge,
-                           78:    self._opTranslate,
-                           79:    self._opScale,
-                           80:    self._opRotPoint,
-                           81:    self._opRotScPoint,
-                           82:    self._opPut,
-                           83:    self._opEyeTrackPalette,
-                           84:    self._opMesh,
-                           85:    self._opLocVertexPool,
-                           86:    self._opMeshPrim,
-                           87:    self._opRoadSeg,
-                           88:    self._opRoadZone,
-                           89:    self._opMorphVertex,
-                           90:    self._opLinkPalette,
-                           91:    self._opSound,
-                           92:    self._opRoadPath,
-                           93:    self._opSoundPalette,
-                           94:    self._opGenMatrix,
-                           95:    self._opText,
-                           96:    self._opSwitch,
-                           97:    self._opLineStylePalette,
-                           98:    self._opClipRegion,
-                          100:    self._opExtension,
-                          101:    self._opLightSrc,
-                          102:    self._opLightSrcPalette,
-                          103:    self._opReserved,
-                          104:    self._opReserved,
-                          105:    self._opBoundSphere,
-                          106:    self._opBoundCylinder,
-                          107:    self._opBoundConvexHull,
-                          108:    self._opBoundVolCentre,
-                          109:    self._opBoundVolOrientation,
-                          110:    self._opReserved,
-                          111:    self._opLightPt,
-                          112:    self._opTextureMapPalette,
-                          113:    self._opMatPalette,
-                          114:    self._opNameTable,
-                          115:    self._opCAT,
-                          116:    self._opCATData,
-                          117:    self._opReserved,
-                          118:    self._opReserved,
-                          119:    self._opBoundHist,
-                          120:    self._opReserved,
-                          121:    self._opReserved,
-                          122:    self._opPushAttr,
-                          123:    self._opPopAttr,
-                          124:    self._opReserved,
-                          125:    self._opReserved,
-                          126:    self._opCurve,
-                          127:    self._opRoadConstruc,
-                          128:    self._opLightPtAppearPalette,
-                          129:    self._opLightPtAnimatPalette,
-                          130:    self._opIdxLightPt,
-                          131:    self._opLightPtSys,
-                          132:    self._opIdxStr,
-                          133:    self._opShaderPalette,
-                          134:    self._opReserved,
-                          135:    self._opExtMatHdr,
-                          136:    self._opExtMatAmb,
-                          137:    self._opExtMatDif,
-                          138:    self._opExtMatSpc,
-                          139:    self._opExtMatEms,
-                          140:    self._opExtMatAlp,
-                          141:    self._opExtMatLightMap,
-                          142:    self._opExtMatNormMap,
-                          143:    self._opExtMatBumpMap,
-                          144:    self._opReserved,
-                          145:    self._opExtMatShadowMap,
-                          146:    self._opReserved,
-                          147:    self._opExtMatReflMap,
-                          148:    self._opExtGUIDPalette,
-                          149:    self._opExtFieldBool,
-                          150:    self._opExtFieldInt,
-                          151:    self._opExtFieldFloat,
-                          152:    self._opExtFieldDouble,
-                          153:    self._opExtFieldString,
-                          154:    self._opExtFieldXMLString}
+        # The tuple order for OpCodes is (op_function, size, friendly name)
+        self._OpCodes = {   1:    (self._opHeader, 324, 'header'),
+                            2:    (self._opGroup, 44, 'group'),
+                            4:    (self._opObject, 28, 'object'),
+                            5:    (self._opFace, 80, 'face'),
+                           10:    (self._opPush, 4, 'push'),
+                           11:    (self._opPop, 4, 'pop'),
+                           14:    (self._opDoF, 384, 'degree of freedom'),
+                           19:    (self._opPushSubface, 4, 'push subface'),
+                           20:    (self._opPopSubface, 4, 'pop subface'),
+                           21:    (self._opPushExtension, 24, 'push extension'),
+                           22:    (self._opPopExtension, 24, 'pop extension'),
+                           23:    (self._opContinuation, None, 'continuation'),
+                           31:    (self._opComment, None, 'comment'),
+                           32:    (self._opColourPalette, None, 'colour palette'),
+                           33:    (self._opLongID, None, 'long ID'),
+                           49:    (self._opMatrix, 68, 'matrix'),
+                           50:    (self._opVector, 16, 'vector'),
+                           52:    (self._opMultitexture, None, 'multitexture'),
+                           53:    (self._opUVList, 8, 'UV list'),
+                           55:    (self._opBSP, 48, 'binary separating plane'),
+                           60:    (self._opReplicate, 8, 'replicate'),
+                           61:    (self._opInstRef, 8, 'instance reference'),
+                           62:    (self._opInstDef, 8, 'instance definition'),
+                           63:    (self._opExtRef, 216, 'external reference'),
+                           64:    (self._opTexturePalette, 216, 'texture palette'),
+                           67:    (self._opVertexPalette, 8, 'vertex palette'),
+                           68:    (self._opVertexColour, 40, 'vertex with colour'),
+                           69:    (self._opVertexColNorm, 56, 'vertex with colour and normal'),
+                           70:    (self._opVertexColNormUV, 64, 'vertex with colour, normal and UV'),
+                           71:    (self._opVertexColUV, 48, 'vertex with colour and UV'),
+                           72:    (self._opVertexList, None, 'vertex list'),
+                           73:    (self._opLoD, 80, 'level of detail'),
+                           74:    (self._opBoundingBox, 52, 'bounding box'),
+                           76:    (self._opRotEdge, 64, 'rotate about edge'),
+                           78:    (self._opTranslate, 56, 'translate'),
+                           79:    (self._opScale, 48, 'scale'),
+                           80:    (self._opRotPoint, 48, 'rotate about point'),
+                           81:    (self._opRotScPoint, 96, 'rotate and/or scale to point'),
+                           82:    (self._opPut, 152, 'put'),
+                           83:    (self._opEyeTrackPalette, 4008, 'eyepoint and trackplane palette'),
+                           84:    (self._opMesh, 84, 'mesh'),
+                           85:    (self._opLocVertexPool, None, 'local vertex pool'),
+                           86:    (self._opMeshPrim, None, 'mesh primitive'),
+                           87:    (self._opRoadSeg, 12, 'road segment'),
+                           88:    (self._opRoadZone, 176, 'road zone'),
+                           89:    (self._opMorphVertex, None, 'morph vertex list'),
+                           90:    (self._opLinkPalette, None, 'linkage palette'),
+                           91:    (self._opSound, 88, 'sound'),
+                           92:    (self._opRoadPath, 632, 'road path'),
+                           93:    (self._opSoundPalette, None, 'sound palette'),
+                           94:    (self._opGenMatrix, 68, 'general matrix'),
+                           95:    (self._opText, 320, 'text'),
+                           96:    (self._opSwitch, None, 'switch'),
+                           97:    (self._opLineStylePalette, 12, 'line style palette'),
+                           98:    (self._opClipRegion, 280, 'clip region'),
+                          100:    (self._opExtension, None, 'extension'),
+                          101:    (self._opLightSrc, 64, 'light source'),
+                          102:    (self._opLightSrcPalette, 240, 'light source palette'),
+                          103:    (self._opReserved, None, 'reserved'),
+                          104:    (self._opReserved, None, 'reserved'),
+                          105:    (self._opBoundSphere, 16, 'bounding sphere'),
+                          106:    (self._opBoundCylinder, 24, 'bounding cylinder'),
+                          107:    (self._opBoundConvexHull, None, 'bounding convex hull'),
+                          108:    (self._opBoundVolCentre, 32, 'bounding volume centre'),
+                          109:    (self._opBoundVolOrientation, 32, 'bounding volume orientation'),
+                          110:    (self._opReserved, None, 'reserved'),
+                          111:    (self._opLightPt, 156, 'light point'),
+                          112:    (self._opTextureMapPalette, None, 'texture mapping palette'),
+                          113:    (self._opMatPalette, 84, 'material palette'),
+                          114:    (self._opNameTable, None, 'name table'),
+                          115:    (self._opCAT, 80, 'continuously adaptive terrain (CAT)'),
+                          116:    (self._opCATData, None, 'CAT data'),
+                          117:    (self._opReserved, None, 'reserved'),
+                          118:    (self._opReserved, None, 'reserved'),
+                          119:    (self._opBoundHist, None, 'bounding histogram'),
+                          120:    (self._opReserved, None, 'reserved'),
+                          121:    (self._opReserved, None, 'reserved'),
+                          122:    (self._opPushAttr, 8, 'push attribute'),
+                          123:    (self._opPopAttr, 4, 'pop attribute'),
+                          124:    (self._opReserved, None, 'reserved'),
+                          125:    (self._opReserved, None, 'reserved'),
+                          126:    (self._opCurve, None, 'curve'),
+                          127:    (self._opRoadConstruc, 168, 'road construction'),
+                          128:    (self._opLightPtAppearPalette, 412, 'light point appearance palette'),
+                          129:    (self._opLightPtAnimatPalette, None, 'light point animation palette'),
+                          130:    (self._opIdxLightPt, 28, 'indexed light point'),
+                          131:    (self._opLightPtSys, 24, 'light point system'),
+                          132:    (self._opIdxStr, None, 'indexed string'),
+                          133:    (self._opShaderPalette, None, 'shader palette'),
+                          134:    (self._opReserved, None, 'reserved'),
+                          135:    (self._opExtMatHdr, 28, 'extended material header'),
+                          136:    (self._opExtMatAmb, 48, 'extended material ambient'),
+                          137:    (self._opExtMatDif, 48, 'extended material diffuse'),
+                          138:    (self._opExtMatSpc, 48, 'extended material specular'),
+                          139:    (self._opExtMatEms, 48, 'extended material emissive'),
+                          140:    (self._opExtMatAlp, 44, 'extended material alpha'),
+                          141:    (self._opExtMatLightMap, 16, 'extended material light map'),
+                          142:    (self._opExtMatNormMap, 12, 'extended material normal map'),
+                          143:    (self._opExtMatBumpMap, 20, 'extended material bump map'),
+                          144:    (self._opReserved, None, 'reserved'),
+                          145:    (self._opExtMatShadowMap, 16, 'extended material shadow map'),
+                          146:    (self._opReserved, None, 'reserved'),
+                          147:    (self._opExtMatReflMap, 32, 'extended material reflection map'),
+                          148:    (self._opExtGUIDPalette, 48, 'extension GUID palette'),
+                          149:    (self._opExtFieldBool, 12, 'extension field boolean'),
+                          150:    (self._opExtFieldInt, 12, 'extension field integer'),
+                          151:    (self._opExtFieldFloat, 12, 'extension field float'),
+                          152:    (self._opExtFieldDouble, 16, 'extension field double'),
+                          153:    (self._opExtFieldString, None, 'extension field string'),
+                          154:    (self._opExtFieldXMLString, None, 'extension field XML string record')}
         self._ObsoleteOpCodes = [3, 6, 7, 8, 9, 12, 13, 16, 17, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 65, 66, 77]
         
         self.Records = dict()
@@ -404,7 +404,13 @@ class OpenFlight:
                 if iRead not in self._OpCodes:
                     raise Exception("Unable to continue OpenFlight Opcode not recognised.")
                 # If here, there's a code that can be run.
-                self._OpCodes[iRead](fileName)
+                # Determine whether we should check the size of the block
+                if self._OpCodes[iRead][1] is not None:
+                    # There's a size we should check matches
+                    RecordLength = struct.unpack('>H', self.f.read(2))[0]
+                    if RecordLength != self._OpCodes[iRead][1]:
+                        raise Exception("Unexpected " + self._OpCodes[iRead][2] + " record length")
+                self._OpCodes[iRead][0](fileName)
         except BaseException, e:
             print("An error occurred when calling Opcode " + str(iRead) + ".")
             print(str(e))
@@ -424,9 +430,6 @@ class OpenFlight:
     
     def _opGroup(self, fileName = None):
         # Opcode 2
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        if RecordLength != 44:
-            raise Exception("Unexpected group record length.")
         if "Group" not in self.Records:
             self.Records["Group"] = dict()
         
@@ -458,9 +461,6 @@ class OpenFlight:
     
     def _opObject(self, fileName = None):
         # Opcode 4
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        if RecordLength != 28:
-            raise Exception("Unexpected object record length.")
         if "Object" not in self.Records:
             self.Records["Object"] = dict()
         # Get ASCII ID
@@ -488,16 +488,11 @@ class OpenFlight:
     
     def _opPush(self, fileName = None):
         # Opcode 10
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        if RecordLength != 4:
-            raise Exception("Unexpected push level record length.")
-    
+        pass
     
     def _opPop(self, fileName = None):
         # Opcode 11
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        if RecordLength != 4:
-            raise Exception("Unexpected pop level record length.")
+        pass
     
     def _opDoF(self, fileName = None):
         # Opcode 14
@@ -505,22 +500,18 @@ class OpenFlight:
     
     def _opPushSubface(self, fileName = None):
         # Opcode 19
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        if RecordLength != 4:
-            raise Exception("Unexpected push subface record length.")
+        pass
     
     def _opPopSubface(self, fileName = None):
         # Opcode 20
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        if RecordLength != 4:
-            raise Exception("Unexpected pop subface record length.")
+        pass
     
     def _opPushExtension(self, fileName = None):
         # Opcode 21
         pass
     
     
-    def _opPupExtension(self, fileName = None):
+    def _opPopExtension(self, fileName = None):
         # Opcode 22
         pass
     
@@ -547,10 +538,6 @@ class OpenFlight:
     
     def _opMatrix(self, fileName = None):
         # Opcode 49
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        print str(RecordLength)
-        if RecordLength != 68:
-            raise Exception("Unexpected matrix record length.")
         if "Matrix" not in self.Records:
             self.Records["Matrix"] = dict()
         name = 'Matrix'
@@ -603,9 +590,6 @@ class OpenFlight:
     
     def _opExtRef(self, fileName = None):
         # Opcode 63
-        RecordLength = struct.unpack('>H', self.f.read(2))[0]
-        if RecordLength != 216:
-            raise Exception("Unexpected External Reference record length.")
         if "ExtRef" not in self.Records:
             self.Records["ExtRef"] = dict()
         
