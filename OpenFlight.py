@@ -700,27 +700,99 @@ class OpenFlight:
     
     def _opVertexPalette(self, fileName = None):
         # Opcode 67
-        pass
+        newObject = dict()
+        newObject['Datatype'] = "VertexPalette"
+        newObject['Length'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opVertexColour(self, fileName = None):
         # Opcode 68
-        pass
+        newObject = dict()
+        newObject['Datatype'] = "VertexColour"
+        newObject['ColourNameIdx'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Flags'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Coordinate'] = np.zeros((1, 3))
+        # For x, y and z
+        for colIdx in range(3):
+            newObject['Coordinate'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        newObject['PackedColour'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['VertexColourIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opVertexColNorm(self, fileName = None):
         # Opcode 69
-        pass
+        newObject = dict()
+        newObject['Datatype'] = "VertexColourWithNormal"
+        newObject['ColourNameIdx'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Flags'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Coordinate'] = np.zeros((1, 3))
+        # For x, y and z
+        for colIdx in range(3):
+            newObject['Coordinate'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['Normal'] = np.zeros((1, 3))
+        # For i, j and k
+        for colIdx in range(3):
+            newObject['Normal'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['PackedColour'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['VertexColourIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opVertexColNormUV(self, fileName = None):
         # Opcode 70
-        pass
+        newObject = dict()
+        newObject['Datatype'] = "VertexColourWithNormalUV"
+        newObject['ColourNameIdx'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Flags'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Coordinate'] = np.zeros((1, 3))
+        # For x, y and z
+        for colIdx in range(3):
+            newObject['Coordinate'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['Normal'] = np.zeros((1, 3))
+        # For i, j and k
+        for colIdx in range(3):
+            newObject['Normal'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['TextureCoordinate'] = np.zeros((1, 2))
+        newObject['TextureCoordinate'][0, 0] = struct.unpack('>f', self.f.read(4))[0]
+        newObject['TextureCoordinate'][0, 1] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['PackedColour'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['VertexColourIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opVertexColUV(self, fileName = None):
         # Opcode 71
-        pass
+        newObject = dict()
+        newObject['Datatype'] = "VertexColourWithUV"
+        newObject['ColourNameIdx'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Flags'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['Coordinate'] = np.zeros((1, 3))
+        # For x, y and z
+        for colIdx in range(3):
+            newObject['Coordinate'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        newObject['TextureCoordinate'] = np.zeros((1, 2))
+        newObject['TextureCoordinate'][0, 0] = struct.unpack('>f', self.f.read(4))[0]
+        newObject['TextureCoordinate'][0, 1] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['PackedColour'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['VertexColourIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opVertexList(self, fileName = None):
