@@ -308,7 +308,7 @@ class OpenFlight:
         
         EllipsoidModel = {0: 'WGS 1984', 1: 'WGS 1972', 2: 'Bessel', 3: 'Clarke', 4: 'NAD 1927', -1: 'User defined ellipsoid'}
         
-        iRead = struct.unpack('>I', self.f.read(4))[0]
+        iRead = struct.unpack('>i', self.f.read(4))[0]
         
         if iRead not in EllipsoidModel:
             raise Exception("Unexpected Earth ellipsoid model type")
