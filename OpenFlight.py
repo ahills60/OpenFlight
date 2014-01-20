@@ -35,7 +35,8 @@ class OpenFlight:
         self.Settings = dict()
         self._LastPlace = None
         # The tuple order for OpCodes is (op_function, size, friendly name)
-        self._OpCodes = {   1:    (self._opHeader, 324, 'header'),
+        self._OpCodes = {   0:    (self._opReserved, None, 'padding'),
+                            1:    (self._opHeader, 324, 'header'),
                             2:    (self._opGroup, 44, 'group'),
                             4:    (self._opObject, 28, 'object'),
                             5:    (self._opFace, 80, 'face'),
@@ -148,6 +149,11 @@ class OpenFlight:
         self._ObsoleteOpCodes = [3, 6, 7, 8, 9, 12, 13, 16, 17, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 65, 66, 77]
         
         self.Records = dict()
+        self.Records["Tree"] = []
+        self.Records["Instances"] = dict()
+        self._RecordType = 'Tree'
+        self._TreeStack = []
+        self._InstanceStack = []
     
     def _check_filesize(self, fileName):
         fileSize = os.stat(fileName).st_size
@@ -389,6 +395,10 @@ class OpenFlight:
         # We can skip past the header and start reading stuff...
         self.f.seek(self._LastPlace)
         
+        # Reset the stacks
+        self._TreeStack = []
+        self._InstanceStack = []
+        
         print "Reading OpenFlight file..."
         
         try:
@@ -421,6 +431,24 @@ class OpenFlight:
                 self.f.close()
                 self.f = None
     
+    def _addObject(self, newObject = None):
+        if newObject is None:
+            raise Exception("Unable to add object. No object was defined.")
+        
+        # Inject this object into the tree
+        if self._RecordType == "Tree":
+            node = self.Records["Tree"]
+            for idx in self._TreeStack:
+                node = node[idx]
+            node.append(newObject)
+        elif self._RecordType == "Instances":
+            node = self.Records["Instances"]
+            for idx in self._InstanceStack:
+                node = node[idx]
+            node.append(newObject)
+        else:
+            raise Exception("Record type not recognised.")
+    
     def _opReserved(self, fileName = None):
         pass
     
@@ -430,56 +458,43 @@ class OpenFlight:
     
     def _opGroup(self, fileName = None):
         # Opcode 2
-        if "Group" not in self.Records:
-            self.Records["Group"] = dict()
+        newObject = dict()
         
-        # Get ASCII ID
-        ASCID = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
-        if ASCID in self.Records["Group"]:
-            n = 1
-            while ASCID + " " + str(n) in self.Records["Group"]:
-                n += 1
-            ASCID += " " + str(n)
-        print "\tGroup", ASCID, "Created"
-        self.Records["Group"][ASCID] = dict()
-        
-        self.Records["Group"][ASCID]['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['DataType'] = "Group"
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        newObject['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
         
         # Skip some reserved spot
         self.f.seek(2, os.SEEK_CUR)
         
-        self.Records["Group"][ASCID]['Flags'] = struct.unpack('>I', self.f.read(4))[0]
-        self.Records["Group"][ASCID]['FXID1'] = struct.unpack('>h', self.f.read(2))[0]
-        self.Records["Group"][ASCID]['FXID2'] = struct.unpack('>h', self.f.read(2))[0]
-        self.Records["Group"][ASCID]['Significance'] = struct.unpack('>h', self.f.read(2))[0]
-        self.Records["Group"][ASCID]['LayerCode'] = struct.unpack('>B', self.f.read(1))[0]
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['FXID1'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['FXID2'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['Significance'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['LayerCode'] = struct.unpack('>B', self.f.read(1))[0]
         
         self.f.seek(5, os.SEEK_CUR)
-        self.Records["Group"][ASCID]['LoopCount'] = struct.unpack('>I', self.f.read(4))[0]
-        self.Records["Group"][ASCID]['LoopDuration'] = struct.unpack('>f', self.f.read(4))[0]
-        self.Records["Group"][ASCID]['LastFrameDuration'] = struct.unpack('>f', self.f.read(4))[0]
+        newObject['LoopCount'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['LoopDuration'] = struct.unpack('>f', self.f.read(4))[0]
+        newObject['LastFrameDuration'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        # Finally inject object into tree
+        self._addObject(newObject)
     
     def _opObject(self, fileName = None):
         # Opcode 4
-        if "Object" not in self.Records:
-            self.Records["Object"] = dict()
-        # Get ASCII ID
-        ASCID = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
-        if ASCID in self.Records["Object"]:
-            n = 1
-            while ASCID + " " + str(n) in self.Records["Object"]:
-                n += 1
-            ASCID += " " + str(n)
-        print "\tObject", ASCID, "Created"
-        self.Records["Object"][ASCID] = dict()
-        
-        self.Records["Object"][ASCID]['Flags'] = struct.unpack('>I', self.f.read(4))[0]
-        self.Records["Object"][ASCID]['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
-        self.Records["Object"][ASCID]['Transparency'] = struct.unpack('>H', self.f.read(2))[0]
-        self.Records["Object"][ASCID]['FXID1'] = struct.unpack('>h', self.f.read(2))[0]
-        self.Records["Object"][ASCID]['FXID2'] = struct.unpack('>h', self.f.read(2))[0]
-        self.Records["Object"][ASCID]['Significance'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject = dict()
+        newObject['DataType'] = "Object"
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['Transparency'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['FXID1'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['FXID2'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['Significance'] = struct.unpack('>h', self.f.read(2))[0]
         self.f.seek(2, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     def _opFace(self, fileName = None):
         # Opcode 5
@@ -488,11 +503,37 @@ class OpenFlight:
     
     def _opPush(self, fileName = None):
         # Opcode 10
-        pass
+        if self._RecordType == "Tree":
+            node = self.Records["Tree"]
+            for idx in self._TreeStack:
+                node = node[idx]
+            self._TreeStack.append(len(node))
+            node.append([])
+        elif self._RecordType == "Instances":
+            node = self.Records["Instances"]
+            for idx in self._InstanceStack:
+                node = node[idx]
+            self._InstanceStack.append(len(node))
+            node.append([])
+        else:
+            raise Exception("Unable to determine stack type.")
     
     def _opPop(self, fileName = None):
         # Opcode 11
-        pass
+        if self._RecordType == "Tree":
+            if len(self._TreeStack) == 0:
+                raise Exception("Tree stack is empty: nothing to pop.")
+            self._TreeStack.pop()
+        elif self._RecordType == "Instances":
+            self._InstanceStack.pop()
+            
+            # If we pop enough times, we switch back to tree
+            if len(self._InstanceStack) == 1:
+                self._RecordType = "Tree"
+                self._InstanceStack = []
+            pass
+        else:
+            raise Exception("Unable to determine stack type.")
     
     def _opDoF(self, fileName = None):
         # Opcode 14
@@ -537,21 +578,14 @@ class OpenFlight:
     
     
     def _opMatrix(self, fileName = None):
-        # Opcode 49
-        if "Matrix" not in self.Records:
-            self.Records["Matrix"] = dict()
-        name = 'Matrix'
-        if name in self.Records["Matrix"]:
-            n = 1
-            while name + " " + str(n) in self.Records["Matrix"]:
-                n += 1
-            name += " " + str(n)
-        print "\tMatrix", name, "Created"
-        
-        self.Records["Matrix"][name] = np.zeros((4, 4))
+        # Opcode 49        
+        newObject = np.zeros((4, 4))
         for n in range(16):
             # Enter elements of a matrix by going across their columns
-            self.Records["Matrix"][name][int(n) / 4, n % 4] = struct.unpack('>f', self.f.read(4))[0]
+            newObject[int(n) / 4, n % 4] = struct.unpack('>f', self.f.read(4))[0]
+        
+        # Inject
+        self._addObject(newObject)
     
     def _opVector(self, fileName = None):
         # Opcode 50
@@ -579,34 +613,45 @@ class OpenFlight:
     
     
     def _opInstRef(self, fileName = None):
-        # Opcode 61
-        pass
+        # Opcode 61        
+        # Read instance number
+        instance = struct.unpack('>I', self.f.read(4))[0]
+        
+        if instance not in self.Records["Instances"]:
+            raise Exception("Could not find an instance to reference")
+        
+        # Now add this object to the right place
+        self._addObject(self.Records["Instances"][instance])
     
     
     def _opInstDef(self, fileName = None):
         # Opcode 62
-        pass
-    
+        # Firstly, set the record type to instance definition
+        self._RecordType = "Instances"
+        
+        # Read instance number
+        instance = struct.unpack('>I', self.f.read(4))[0]
+        
+        if instance in self.Records["Instances"]:
+            raise Exception("Instance definition number has already been declared.")
+        
+        # There are no problems. Create an instance and prepare to accept incoming data
+        self.Records["Instances"][instance] = []
+        self._InstanceStack.append(instance)
     
     def _opExtRef(self, fileName = None):
         # Opcode 63
-        if "ExtRef" not in self.Records:
-            self.Records["ExtRef"] = dict()
-        
-        # Get ASCII path
-        ASCIIPath = struct.unpack('>200s', self.f.read(200))[0].replace('\x00', '')
-        if ASCIIPath in self.Records["ExtRef"]:
-            n = 1
-            while ASCIIPath + " " + str(n) in self.Records["ExtRef"]:
-                n += 1
-            ASCIIPath += " " + str(n)
-        print "\tExternal reference to", ASCIIPath, "Created"
-        self.Records["ExtRef"][ASCIIPath] = dict()
+        newObject = dict()
+        newObject['Datatype'] = "ExternalReference"
+        newObject['ASCIIPath'] = struct.unpack('>200s', self.f.read(200))[0].replace('\x00', '')
         
         self.f.seek(4, os.SEEK_CUR)
-        self.Records["ExtRef"][ASCIIPath]["Flags"] = struct.unpack('>I', self.f.read(4))[0]
-        self.Records["ExtRef"][ASCIIPath]["BoundingBox"] = struct.unpack(">H", self.f.read(2))[0]
+        newObject["Flags"] = struct.unpack('>I', self.f.read(4))[0]
+        newObject["BoundingBox"] = struct.unpack(">H", self.f.read(2))[0]
         self.f.seek(2, os.SEEK_CUR)
+        
+        # Inject into tree
+        self._addObject(newObject)
     
     def _opTexturePalette(self, fileName = None):
         # Opcode 64
