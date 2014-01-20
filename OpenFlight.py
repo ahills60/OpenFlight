@@ -569,7 +569,36 @@ class OpenFlight:
     
     def _opColourPalette(self, fileName = None):
         # Opcode 32
-        pass
+        
+        # Read the record length
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject = dict()
+        newObject['DataType'] = 'ColourPalette'
+        
+        # Skip a reserved area
+        self.f.seek(128, os.SEEK_CUR)
+        
+        newObject['BrightestRGB'] = np.zeros((1024, 1))
+        for rowIdx in range(1024):
+            newObject['BrightestRGB'][rowIdx, 0] = struct.unpack('>I', self.f.read(4))[0]
+        
+        if RecordLength > 4228:
+            # Include colour names
+            
+            # Read the number of colour names:
+            noNames = struct.unpack('>I', self.f.read(4))[0]
+            
+            newObject['ColourNames'] = dict()
+            
+            for colourIdx in range(noNames):
+                nameLength = struct.unpack('>H', self.f.read(2))[0]
+                self.f.seek(2, os.SEEK_CUR)
+                colIdx = struct.unpack('>H', self.f.read(2))[0]
+                self.f.seek(2, os.SEEK_CUR)
+                newObject['ColourNames'][colIdx] = stuct.unpack('>' + (nameLength - 8) + 's', self.f.read(nameLength - 8)).replace('\x00', '')[0]
+        
+        self._addObject(newObject)
     
     
     def _opLongID(self, fileName = None):
