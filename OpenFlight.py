@@ -422,7 +422,10 @@ class OpenFlight:
                         raise Exception("Unexpected " + self._OpCodes[iRead][2] + " record length")
                 self._OpCodes[iRead][0](fileName)
         except BaseException, e:
-            print("An error occurred when calling Opcode " + str(iRead) + ".")
+            if iRead not in self._OpCodes:
+                print("An error occurred when calling Opcode " + str(iRead) + ".")
+            else:
+                print("An error occurred when calling Opcode " + str(iRead) + " (" + self._OpCodes[iRead][2]  + ").")
             print(str(e))
             self.e = e
         finally:
@@ -888,7 +891,25 @@ class OpenFlight:
     
     def _opMatPalette(self, fileName = None):
         # Opcode 113
-        pass
+        newObject = dict()
+        newObject['DataType'] = "MaterialPalette"
+        newObject['MaterialIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['MaterialName'] = struct.unpack('>12s', self.f.read(12))[0].replace('\x00', '')
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        componentTypes = ['Ambient', 'Diffuse', 'Specular', 'Emissive']
+        for component in componentTypes:
+            newObject[component] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[component][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['Shininess'] = struct.unpack('>f', self.f.read(4))[0]
+        newObject['Alpha'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        # Now skip over a reserved spot
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opNameTable(self, fileName = None):
