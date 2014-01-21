@@ -752,13 +752,32 @@ class OpenFlight:
     
     def _opVector(self, fileName = None):
         # Opcode 50
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Vector'
+        
+        Components = ['i', 'j', 'k']
+        for component in Components:
+            newObject[component] = stuct.unpack('>f', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opMultitexture(self, fileName = None):
         # Opcode 52
-        pass
-    
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject = dict()
+        newObject['DataType'] = 'Multitexture'
+        
+        newObject['Mask'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        varNames = ['TextureIndex', 'Effect', 'TextureMappingIndex', 'TextureData']
+        for varName in varNames:
+            newObject[varName] = []
+        
+        for textIdx in range((RecordLength / 8) - 1):
+            for varName in varNames:
+            newObject[varName].append(struct.unpack('>H', self.f.read(2))[0]
     
     def _opUVList(self, fileName = None):
         # Opcode 53
