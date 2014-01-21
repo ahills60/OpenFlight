@@ -777,7 +777,9 @@ class OpenFlight:
         
         for textIdx in range((RecordLength / 8) - 1):
             for varName in varNames:
-            newObject[varName].append(struct.unpack('>H', self.f.read(2))[0]
+                newObject[varName].append(struct.unpack('>H', self.f.read(2))[0])
+        
+        self._addObject(newObject)
     
     def _opUVList(self, fileName = None):
         # Opcode 53
