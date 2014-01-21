@@ -147,6 +147,7 @@ class OpenFlight:
                           153:    (self._opExtFieldString, None, 'extension field string'),
                           154:    (self._opExtFieldXMLString, None, 'extension field XML string record')}
         self._ObsoleteOpCodes = [3, 6, 7, 8, 9, 12, 13, 16, 17, 40, 41, 42, 43, 44, 45, 46, 47, 48, 51, 65, 66, 77]
+        self._PreviousOpCode = 0
         
         self.Records = dict()
         self.Records["Tree"] = []
@@ -421,6 +422,9 @@ class OpenFlight:
                     if RecordLength != self._OpCodes[iRead][1]:
                         raise Exception("Unexpected " + self._OpCodes[iRead][2] + " record length")
                 self._OpCodes[iRead][0](fileName)
+                
+                # Lastly, save this Opcode:
+                self._PreviousOpCode = iRead
         except BaseException, e:
             if iRead not in self._OpCodes:
                 print("An error occurred when calling Opcode " + str(iRead) + ".")
@@ -435,6 +439,10 @@ class OpenFlight:
                 self.f = None
     
     def _addObject(self, newObject = None):
+        """
+            Adds an object to the stack.
+            An internal function.
+        """
         if newObject is None:
             raise Exception("Unable to add object. No object was defined.")
         
@@ -502,6 +510,7 @@ class OpenFlight:
     def _opFace(self, fileName = None):
         # Opcode 5
         newObject = dict()
+        newObject['DataType'] = "Face"
         newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
         newObject['IRColCode'] = struct.unpack('>I', self.f.read(4))[0]
         newObject['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
@@ -524,15 +533,13 @@ class OpenFlight:
         if newObject['Template'] not in templateTypes:
             raise Exception("Unable to determine template type.")
         
-        newObject['DetailTexturePatternIdx'] = struct.unpack('>h', self.f.read(2))[0]
-        if newObject['DetailTexturePatternIdx'] == -1:
-            newObject['DetailTexturePatternIdx'] = None
-        newObject['TexturePatternIdx'] = struct.unpack('>h', self.f.read(2))[0]
-        if newObject['TexturePatternIdx'] == -1:
-            newObject['TexturePatternIdx'] = None
-        newObject['MaterialIdx'] = struct.unpack('>h', self.f.read(2))[0]
-        if newObject['MaterialIdx'] == -1:
-            newObject['MaterialIdx'] = None
+        varNames = ['DetailTexturePatternIdx', 'TexturePatternIdx', 'MaterialIdx']
+        
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>h', self.f.read(2))[0]
+            if newObject[varName] == -1:
+                newObject[varName] = None
+        
         newObject['SurfaceMaterialCode'] = struct.unpack('>h', self.f.read(2))[0]
         newObject['FeatureID'] = struct.unpack('>h', self.f.read(2))[0]
         
@@ -613,7 +620,31 @@ class OpenFlight:
     
     def _opDoF(self, fileName = None):
         # Opcode 14
-        pass
+        newObject = dict()
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        # Skip over a reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['DoFOrigin', 'DoFPointx', 'DoFPointxy']
+        for varName in varNames:
+            newObject[varName] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['z', 'y', 'x', 'pitch', 'roll', 'yaw', 'zScale', 'yScale', 'xScale']
+        variants = ['Min', 'Max', 'Current', 'Increment']
+        
+        for varName in varNames:
+            for variant in variants:
+                newObject[varName + variant] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Flags
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     def _opPushSubface(self, fileName = None):
         # Opcode 19
@@ -635,12 +666,33 @@ class OpenFlight:
     
     def _opContinuation(self, fileName = None):
         # Opcode 23
-        pass
+        # This function will require special handling as a continuation record extends previous records.
+        raise Exception("Unexpected continuation record. This should have been handled by the " + self._OpCodes[self._PreviousOpCode][2] + " function.")
     
     
     def _opComment(self, fileName = None):
         # Opcode 31
-        pass
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject = dict()
+        newObject['DataType'] = 'Comment'
+        
+        newObject['Text'] = struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
+        
+        while RecordLength == 0xFFFF:
+            # Expect a continuation record
+            iRead = struct.unpack('>H', self.f.read(2))[0]
+            
+            if iRead != 23:
+                # This is not a continuation record. Reverse and save variable
+                self.f.seek(-2, os.SEEK_CUR)
+                break
+            # This is a continuation record, so get the record length
+            RecordLength = struct.unpack('>H', self.f.read(2))[0]
+            
+            # Now continue appending to variable
+            newObject['Text'] += struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
+        self._addObject(newObject)
     
     
     def _opColourPalette(self, fileName = None):
@@ -679,7 +731,13 @@ class OpenFlight:
     
     def _opLongID(self, fileName = None):
         # Opcode 33
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LongID'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject['ASCIIID'] = struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
+        self._addObject(newObject)
     
     
     def _opMatrix(self, fileName = None):
@@ -870,7 +928,30 @@ class OpenFlight:
     
     def _opVertexList(self, fileName = None):
         # Opcode 72
-        pass
+        newObject = dict()
+        newObject['Datatype'] = "VertexList"
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject['ByteOffset'] = []
+        
+        for verIdx in range((RecordLength / 4) - 1):
+            newObject['ByteOffset'].append(struct.unpack('>I', self.f.read(4))[0])
+        
+        while RecordLength == 0xFFFF:
+            # Expect a continuation record
+            iRead = struct.unpack('>H', self.f.read(2))[0]
+            
+            if iRead != 23:
+                # This is not a continuation record. Reverse and save variable
+                self.f.seek(-2, os.SEEK_CUR)
+                break
+            # This is a continuation record, so get the record length
+            RecordLength = struct.unpack('>H', self.f.read(2))[0]
+            
+            # Now continue appending to variable
+            for verIdx in range((RecordLength / 4) - 1):
+                newObject['ByteOffset'].append(struct.unpack('>I', self.f.read(4))[0])
+        self._addObject(newObject)
     
     
     def _opLoD(self, fileName = None):
