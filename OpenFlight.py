@@ -1192,12 +1192,36 @@ class OpenFlight:
     
     def _opBoundVolCentre(self, fileName = None):
         # Opcode 108
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'BoundingVolumeCentre'
+        
+        # Skip over the reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        Axes = ['x', 'y', 'z']
+        
+        for axis in Axes:
+            newObject[axis] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Finally, add the object to the stack
+        self._addObject(newObject)
     
     
     def _opBoundVolOrientation(self, fileName = None):
         # Opcode 109
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'BoundingVolumeOrientation'
+        
+        # Skip over the reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        Angles = ['Yaw', 'Pitch', 'Roll']
+        
+        for angle in Angles:
+            newObject[angle] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Finally, add the object to the stack
+        self._addObject(newObject)
     
     def _opLightPt(self, fileName = None):
         # Opcode 111
@@ -1249,7 +1273,11 @@ class OpenFlight:
     
     def _opBoundHist(self, fileName = None):
         # Opcode 119
-        pass
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        # And as the contents of the record is "reserved for use by Multigen-Paradigm",
+        # then skip to the end of the record
+        self.f.seek(RecordLength - 4, os.SEEK_CUR)
     
     
     def _opPushAttr(self, fileName = None):
