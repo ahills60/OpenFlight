@@ -793,7 +793,15 @@ class OpenFlight:
     
     def _opReplicate(self, fileName = None):
         # Opcode 60
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Replicate'
+        
+        newObject['NoReplications'] = struct.unpack('>H', self.f.read(2))[0]
+        
+        # Skip over reserved space
+        self.f.seek(2, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opInstRef(self, fileName = None):
@@ -977,7 +985,28 @@ class OpenFlight:
     
     def _opLoD(self, fileName = None):
         # Opcode 73
-        pass
+        newObject = dict()
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        # Skip over the reserved area
+        self.read.seek(4, os.SEEK_CUR)
+        
+        newObject['SwitchInDistance'] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['SwitchOutDistance'] = struct.unpack('>d', self.f.read(8))[0]
+        
+        newObject['FXID1'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['FXID2'] = struct.unpack('>h', self.f.read(2))[0]
+        
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        varNames = ['x', 'y', 'z']
+        
+        for varName in varNames:
+            newObject[varName + 'Centre'] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['TransitionRange'] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['SignificantSize'] = struct.unpack('>d', self.f.read(8))[0]
+        
+        self._addObject(newObject)
     
     
     def _opBoundingBox(self, fileName = None):
