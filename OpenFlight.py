@@ -621,6 +621,7 @@ class OpenFlight:
     def _opDoF(self, fileName = None):
         # Opcode 14
         newObject = dict()
+        newObject['DataType'] = 'DegreeOfFreedom'
         newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
         
         # Skip over a reserved area
@@ -986,6 +987,7 @@ class OpenFlight:
     def _opLoD(self, fileName = None):
         # Opcode 73
         newObject = dict()
+        newObject['DataType'] = 'LevelOfDetail'
         newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
         
         # Skip over the reserved area
@@ -1011,7 +1013,22 @@ class OpenFlight:
     
     def _opBoundingBox(self, fileName = None):
         # Opcode 74
-        pass
+        
+        newObject = dict()
+        newObject['DataType'] = 'BoundingBox'
+        
+        # Skip over the reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        Positions = ['Lowest', 'Highest']
+        Axes = ['x', 'y', 'z']
+        
+        for position in Positions:
+            for axis in Axes:
+                newObject[axis + position] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Finally, add the object to the stack
+        self._addObject(newObject)
     
     
     def _opRotEdge(self, fileName = None):
@@ -1141,12 +1158,31 @@ class OpenFlight:
     
     def _opBoundSphere(self, fileName = None):
         # Opcode 105
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'BoundingSphere'
+        
+        # Skip over the reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['Radius'] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Finally, add the object to the stack
+        self._addObject(newObject)
     
     
     def _opBoundCylinder(self, fileName = None):
         # Opcode 106
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'BoundingCylinder'
+        
+        # Skip over the reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['Radius'] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['Height'] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Finally, add the object to the stack
+        self._addObject(newObject)
     
     
     def _opBoundConvexHull(self, fileName = None):
