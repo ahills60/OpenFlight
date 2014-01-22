@@ -1424,8 +1424,41 @@ class OpenFlight:
     
     def _opSoundPalette(self, fileName = None):
         # Opcode 93
-        pass
-    
+        newObject = dict()
+        newObject['DataType'] = 'SoundPaletteData'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        # This can be of two types based on the subtype value:
+        Subtype = struct.unpack('>I', self.f.read(4))[0]
+        
+        if Subtype == 1:
+            # This is a sound palette header record
+            newObject['Subtype'] = "Header"
+            varNames = ['MaxNumber', 'ActualNumber']
+            for varName in varNames:
+                newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+            
+            # Skip over reserved area
+            self.f.seek(12, os.SEEK_CUR)
+            
+            for soundNo in range(newObject['ActualNumber']):
+                SoundName = "Sound" + str(soundNo)
+                newObject[SoundName] = dict()
+                newObject[SoundName]['SoundIndex'] = struct.unpack('>I', self.f.read(4))[0]
+                # Reserved space for this entry
+                self.f.seek(4, os.SEEK_CUR)
+                newObject[SoundName]['FilenameOffset'] = struct.unpack('>I', self.f.read(4))[0]
+        elif Subtype == 2:
+            # This is a sound palette data record
+            newObject['Subtype'] = "Data"
+            newObject['TotalLength'] = struct.unpack('>I', self.f.read(4))[0]
+            newObject['PackedFilenames'] = struct.unpack('>' + (RecordLength - 12) + 's', self.f.read(RecordLength - 12))[0]
+        else:
+            # This is not recognised.
+            raise Exception("Unable to determine sound record subtype.")
+        
+        self._addObject(newObject)
     
     def _opGenMatrix(self, fileName = None):
         # Opcode 94
