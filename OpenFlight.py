@@ -1148,7 +1148,103 @@ class OpenFlight:
     
     def _opEyeTrackPalette(self, fileName = None):
         # Opcode 83
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'EyepointAndTrackplanePalette'
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        for eyePointIdx in range(10):
+            # Keep this simple
+            eyePoint = 'EyePoint' + format(eyePointIdx, '02d')
+            
+            newObject[eyePoint] = dict()
+            
+            # Now the file
+            newObject[eyePoint]['RotationCentre'] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[eyePoint]['RotationCentre'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+            
+            varNames = ['Yaw', 'Pitch', 'Roll']
+            for varName in Varnames:
+                newObject[eyePoint][varName] = struct.unpack('>f', self.f.read(4))[0]
+            
+            newObject[eyePoint]['RotationMatrix'] = np.zeros((4, 4))
+            for n in range(16):
+                # Enter elements of a matrix by going across their columns
+                newObject[eyePoint]['RotationMatrix'][int(n) / 4, n % 4] = struct.unpack('>f', self.f.read(4))[0]
+            
+            varNames = ['FieldOfView', 'Scale', 'NearClippingPlane', 'FarClippingPlane']
+            for varName in Varnames:
+                newObject[eyePoint][varName] = struct.unpack('>f', self.f.read(4))[0]
+            
+            newObject[eyePoint]['FlythroughMatrix'] = np.zeros((4, 4))
+            for n in range(16):
+                # Enter elements of a matrix by going across their columns
+                newObject[eyePoint]['FlythroughMatrix'][int(n) / 4, n % 4] = struct.unpack('>f', self.f.read(4))[0]
+            
+            newObject[eyePoint]['EyepointPosition'] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[eyePoint]['EyepointPosition'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+            
+            newObject[eyePoint]['YawFlythrough'] = struct.unpack('>f', self.f.read(4))[0]
+            newObject[eyePoint]['PitchFlythrough'] = struct.unpack('>f', self.f.read(4))[0]
+            
+            newObject[eyePoint]['EyepointDirection'] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[eyePoint]['EyepointDirection'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+            
+            varNames = ['NoFlythrough', 'OrthoView', 'ValidEyepoint', 'xImageOffset', 'yImageOffset', 'ImageZoom']
+            for varName in varNames:
+                newObject[eyePoint][varName] = struct.unpack('>i', self.f.read(4))[0]
+            
+            # Skip over 4*8 + 4 of reserved space
+            self.f.seek(36, os.SEEK_CUR)
+        
+        for trackplaneIdx in range(10):
+            trackplane = 'Trackplane' + format(trackplaneIdx, '02d')
+            
+            newObject[trackplane] = dict()
+            newObject[trackplane]['Valid'] = struct.unpack('>i', self.f.read(4))[0]
+            
+            self.f.seek(4, os.SEEK_CUR)
+            
+            varNames = ['Origin', 'Alignment', 'Plane']
+            for varName in varNames:
+                newObject[eyePoint][varName] = np.zeros((1, 3))
+                for colIdx in range(3):
+                    newObject[eyePoint][varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+            
+            newObject[trackplane]['GridVisible'] = struct.unpack('>?', self.f.read(1))[0]
+            
+            varNames = ['GridType', 'GridUnder']
+            for varName in varNames:
+                newObject[trackplane][varName] = struct.unpack('>B', self.f.read(1))[0]
+            
+            self.f.seek(1, os.SEEK_CUR)
+            
+            newObject[trackplane]['GridAngle'] = struct.unpack('>f', self.f.read(4))[0]
+            
+            varNames = ['xGridSpace', 'yGridSpace']
+            for varName in varNames:
+                newObject[trackplane]['varName'] = struct.unpack('>d', self.f.read(8))[0]
+            
+            varNames = ['RadialGridDirection', 'RectangularGridDirection']
+            for varName in varNames:
+                newObject[trackplane][varName] = struct.unpack('>b', self.f.read(1))[0]
+            
+            newObject[trackplane]['SnapToGrid'] = struct.unpack('>B', self.f.read(1))[0]
+            
+            self.f.seek(2, os.SEEK_CUR)
+            
+            newObject[trackplane]['GridSize'] = struct.unpack('>d', self.f.read(8))[0]
+            
+            # This may be incorrect. Record says a 4 byte boolean! I assume 4 * 1 byte booleans.
+            for quadrant in range(1, 5):
+                newObject[trackplane]['VisibleGridMask' + quadrant] = struct.unpack('>?', self.f.read(1))[0]
+            
+            self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opMesh(self, fileName = None):
@@ -1203,7 +1299,8 @@ class OpenFlight:
     
     def _opGenMatrix(self, fileName = None):
         # Opcode 94
-        pass
+        # This is the same as the matrix command, so call the matrix function
+        self._opMatrix(fileName)
     
     
     def _opText(self, fileName = None):
