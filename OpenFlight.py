@@ -1034,27 +1034,100 @@ class OpenFlight:
     
     def _opRotEdge(self, fileName = None):
         # Opcode 76
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'RotateAboutEdge'
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['FirstPoint', 'SecondPoint']
+        
+        for varName in varNames:
+            newObject[varName] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        newObject['Angle'] = stuct.unpack('>f', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opTranslate(self, fileName = None):
         # Opcode 78
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Translate'
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['From', 'Delta']
+        
+        for varName in varNames:
+            newObject[varName] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        self._addObject(newObject)
     
     
     def _opScale(self, fileName = None):
         # Opcode 79
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Scale'
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['ScaleCentre'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['ScaleCentre'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['xScale', 'yScale', 'zScale']
+        for varName in varNames:
+            newObject[varName] = stuct.unpack('>f', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opRotPoint(self, fileName = None):
         # Opcode 80
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'RotateAboutPoint'
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['RotationCentre'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['RotationCentre'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['iAxis', 'jAxis', 'kAxis', 'Angle']
+        for varName in varNames:
+            newObject[varName] = stuct.unpack('>f', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opRotScPoint(self, fileName = None):
         # Opcode 81
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'RotateScaleToPoint'
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['ScaleCentre', 'ReferencePoint', 'ToPoint']
+        for varName in varNames:
+            newObject[varName] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['OverallScale', 'ScaleInDirection', 'Angle']
+        for varName in varNames:
+            newObject[varName] = stuct.unpack('>f', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opPut(self, fileName = None):
