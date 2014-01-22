@@ -1368,7 +1368,34 @@ class OpenFlight:
     
     def _opSound(self, fileName = None):
         # Opcode 91
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Sound'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['IndexIntoSoundPalette'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['OffsetCoordinate'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['OffsetCoordinate'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        newObject['SoundDirection'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['SoundDirection'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['Amplitude', 'PitchBend', 'Priority', 'Falloff', 'Width']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        # Skip over reserved space
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opRoadPath(self, fileName = None):
@@ -1423,7 +1450,31 @@ class OpenFlight:
     
     def _opClipRegion(self, fileName = None):
         # Opcode 98
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ClipRegion'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(6, os.SEEK_CUR)
+        
+        newObject['Flags'] = []
+        for flagNo in range(5):
+            newObject['Flags'].append(struct.unpack('>c', self.f.read(1))[0])
+        
+        self.f.seek(1, os.SEEK_CUR)
+        
+        for regionIdx in range(1, 5):
+            newObject['Region' + str(regionIdx)] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject['Region' + str(regionIdx)][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['CoeffsA', 'CoeffsB', 'CoeffsC', 'CoeffsD']
+        
+        for varName in varNames:
+            newObject[varName] = []
+            for colIdx in range(5):
+                newObject[varName].append(struct.unpack('>d', self.f.read(8))[0])
+        
+        self._addObject(newObject)
     
     
     def _opExtension(self, fileName = None):
