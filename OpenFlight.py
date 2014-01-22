@@ -789,7 +789,17 @@ class OpenFlight:
     
     def _opBSP(self, fileName = None):
         # Opcode 55
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'BinarySeparatingPlane'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['PlaneEquationCoeffs'] = np.zeros((1, 4))
+        for colIdx in range(4):
+            newObject['PlaneEquationCoeffs'][0, colIdx] = struct.unpack('>8d', self.f.read(8))[0]
+        
+        self._addObject(newObject)
     
     
     def _opReplicate(self, fileName = None):
@@ -1829,7 +1839,16 @@ class OpenFlight:
     
     def _opExtGUIDPalette(self, fileName = None):
         # Opcode 148
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtensionGUIDPalette'
+        newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        # Documentation says that this is a 40 byte integer. I imply it's an integer (4 bytes) * 10.
+        newObject['GUIDString'] = []
+        for idx in range(10):
+            newObject['GUIDString'].append(struct.unpack('>I', self.f.read(4))[0])
+        
+        self._addObject(newObject)
     
     
     def _opExtFieldBool(self, fileName = None):
