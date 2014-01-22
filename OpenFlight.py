@@ -1249,7 +1249,87 @@ class OpenFlight:
     
     def _opMesh(self, fileName = None):
         # Opcode 84
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Mesh'
+        
+        # This is identical to the face record.
+        
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['IRColourCode'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['RelativePriority'] = struct.unpack('>h', self.f.read(2))[0]
+        
+        newObject['DrawType'] = struct.unpack('>B', self.f.read(1))[0]
+        
+        drawTypes = [0, 1, 2, 3, 4, 8, 9, 10]
+        if newObject['DrawType'] not in drawTypes:
+            raise Exception("Unable to determine draw type.")
+        
+        newObject['TextureWhite'] = struct.unpack('>?', self.f.read(1))[0]
+        newObject['ColourNameIdx'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['AltColourNameIdx'] = struct.unpack('>H', self.f.read(2))[0]
+        
+        # Skip over reserved
+        self.f.seek(1, os.SEEK_CUR)
+        
+        templateTypes = [0, 1, 2, 4]
+        newObject['Template'] = struct.unpack('>B', self.f.read(1))[0]
+        if newObject['Template'] not in templateTypes:
+            raise Exception("Unable to determine template type.")
+        
+        varNames = ['DetailTexturePatternIdx', 'TexturePatternIdx', 'MaterialIdx']
+        
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>h', self.f.read(2))[0]
+            if newObject[varName] == -1:
+                newObject[varName] = None
+        
+        newObject['SurfaceMaterialCode'] = struct.unpack('>h', self.f.read(2))[0]
+        newObject['FeatureID'] = struct.unpack('>h', self.f.read(2))[0]
+        
+        newObject['IRMaterialCode'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['Transparency'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['LODGenerationControl'] = struct.unpack('>B', self.f.read(1))[0]
+        newObject['LineStyleIdx'] = struct.unpack('>B', self.f.read(1))[0]
+        
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        lightModes = [0, 1, 2, 3]
+        newObject['LightMode'] = struct.unpack('>B', self.f.read(1))[0]
+        if newObject['LightMode'] not in lightModes:
+            raise Exception("Unable to determine light mode.")
+        
+        # Skip over reserved
+        self.f.seek(7, os.SEEK_CUR)
+        
+        newObject['PackedColour'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['AltPackedColour'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['TextureMappingIdx'] = struct.unpack('>h', self.f.read(2))[0]
+        if newObject['TextureMappingIdx'] == -1:
+            newObject['TextureMappingIdx'] = None
+        
+        self.f.seek(2, os.SEEK_CUR)
+        
+        newObject['PrimaryColourIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['PrimaryColourIdx'] == -1:
+            newObject['PrimaryColourIdx'] = None
+        
+        newObject['AltColourIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['AltColourIdx'] == -1:
+            newObject['AltColourIdx'] = None
+        
+        self.f.seek(2, os.SEEK_CUR)
+        
+        newObject['ShaderIdx'] = struct.unpack('>h', self.f.read(2))[0]
+        if newObject['ShaderIdx'] == -1:
+            newObject['ShaderIdx'] = None
+        
+        self._addObject(newObject)
+        
+        
     
     
     def _opLocVertexPool(self, fileName = None):
