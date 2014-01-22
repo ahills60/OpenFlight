@@ -967,7 +967,8 @@ class OpenFlight:
         for verIdx in range((RecordLength / 4) - 1):
             newObject['ByteOffset'].append(struct.unpack('>I', self.f.read(4))[0])
         
-        while RecordLength == 0xFFFF:
+        # The below record length: 16383 * 4 = 65532 (0xFFFC) as max 65535 is (0xFFFF)
+        while RecordLength >= 0xfffc:
             # Expect a continuation record
             iRead = struct.unpack('>H', self.f.read(2))[0]
             
