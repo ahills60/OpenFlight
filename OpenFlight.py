@@ -1083,7 +1083,7 @@ class OpenFlight:
         
         varNames = ['xScale', 'yScale', 'zScale']
         for varName in varNames:
-            newObject[varName] = stuct.unpack('>f', self.f.read(4))[0]
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
         
         self.f.seek(4, os.SEEK_CUR)
         
@@ -1103,7 +1103,7 @@ class OpenFlight:
         
         varNames = ['iAxis', 'jAxis', 'kAxis', 'Angle']
         for varName in varNames:
-            newObject[varName] = stuct.unpack('>f', self.f.read(4))[0]
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
         
         self._addObject(newObject)
     
@@ -1123,7 +1123,7 @@ class OpenFlight:
         
         varNames = ['OverallScale', 'ScaleInDirection', 'Angle']
         for varName in varNames:
-            newObject[varName] = stuct.unpack('>f', self.f.read(4))[0]
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
         
         self.f.seek(4, os.SEEK_CUR)
         
@@ -1132,8 +1132,19 @@ class OpenFlight:
     
     def _opPut(self, fileName = None):
         # Opcode 82
-        pass
-    
+        newObject = dict()
+        newObject['DataType'] = 'Put'
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['FromOrigin', 'FromAlign', 'FromTrack', 'ToOrigin', 'ToAlign', 'ToTrack']
+        
+        for varName in varNames:
+            newObject[varNames] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[varNames][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        self._addObject(newObject)
     
     def _opEyeTrackPalette(self, fileName = None):
         # Opcode 83
