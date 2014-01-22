@@ -1676,7 +1676,7 @@ class OpenFlight:
         for varName in varNames:
             newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
         
-        if newObject['RoadType'] is not in [0, 1, 2]:
+        if newObject['RoadType'] not in [0, 1, 2]:
             raise Exception("Unable to determine road type.")
         
         varNames = ['EntryPoint', 'AlignmentPoint', 'ExitPoint']
