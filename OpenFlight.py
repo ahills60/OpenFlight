@@ -1344,7 +1344,11 @@ class OpenFlight:
     
     def _opRoadSeg(self, fileName = None):
         # Opcode 87
-        pass
+        newObject = dict()
+        newObject['DataType'] = "RoadSegment"
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self._addObject(newObject)
     
     
     def _opRoadZone(self, fileName = None):
@@ -1369,7 +1373,26 @@ class OpenFlight:
     
     def _opRoadPath(self, fileName = None):
         # Opcode 92
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'RoadPath'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['PathName'] = struct.unpack('>120s', self.f.read(120))[0].replace('\x00', '')
+        
+        newObject['SpeedLimit'] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # No passing should be a *4 byte* boolean. I will read this as an integer instead.
+        newObject['NoPassing'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['VertexType'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['VertexType'] not in [1, 2]:
+            raise Exception("Unable to determine vertex type.")
+        
+        self.f.seek(480, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opSoundPalette(self, fileName = None):
@@ -1559,7 +1582,40 @@ class OpenFlight:
     
     def _opRoadConstruc(self, fileName = None):
         # Opcode 127
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'RoadConstruction'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['RoadType', 'RoadToolsVersion']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        if newObject['RoadType'] is not in [0, 1, 2]:
+            raise Exception("Unable to determine road type.")
+        
+        varNames = ['EntryPoint', 'AlignmentPoint', 'ExitPoint']
+        for varName in varNames:
+            newObject[varName] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['ArcRadius', 'EntrySpiralLength', 'ExitSpiralLength', 'Superelevation']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>d', self.f.read(8))[0]
+        
+        newObject['SpiralType'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['SpiralType'] not in [0, 1, 2]:
+            raise Exception("Unable to determine spiral type.")
+        
+        newObject['VerticalParabolaFlag'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        varNames = ['VerticalCurveLength', 'MinimumCurveLength', 'EntrySlope', 'ExitSlope']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>d', self.f.read(8))[0]
+        
+        self._addObject(newObject)
     
     
     def _opLightPtAppearPalette(self, fileName = None):
