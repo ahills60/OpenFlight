@@ -1478,7 +1478,13 @@ class OpenFlight:
     
     def _opLineStylePalette(self, fileName = None):
         # Opcode 97
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LineStylePalette'
+        newObject['LineStyleIdx'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['PatternMask'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['LineWidth'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opClipRegion(self, fileName = None):
@@ -1522,7 +1528,41 @@ class OpenFlight:
     
     def _opLightSrcPalette(self, fileName = None):
         # Opcode 102
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LightSourcePalette'
+        newObject['LightSourceIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(8, os.SEEK_CUR)
+        
+        newObject['LightSourceName'] = struct.unpack('>20s', self.f.read(20))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['Ambient', 'Diffuse', 'Specular']
+        
+        for varName in varNames:
+            newObject[varName] = np.zeros((1, 4))
+            for colIdx in range(4):
+                newObject[varName][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['LightingType'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['LightingType'] not in [0, 1, 2]:
+            raise Exception("Unable to determine lighting type.")
+        
+        self.f.seek(40, os.SEEK_CUR)
+        
+        varNames = ['SpotExponentialDropoffTerm', 'SpotCutoffAngle', 'Yaw', 'Pitch', 'ConstantAttenuationCoeff', 'LinearAttenuationCoeff', 'QuadraticAttenuationCoeff']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['ModellingLight'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['ModellingLight'] not in [0, 1]:
+            raise Exception("Unable to determine modelling light.")
+        
+        # Skip over reserved area.
+        self.f.seek(76, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opBoundSphere(self, fileName = None):
