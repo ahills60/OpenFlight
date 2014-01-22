@@ -1363,7 +1363,23 @@ class OpenFlight:
     
     def _opRoadZone(self, fileName = None):
         # Opcode 88
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'RoadZone'
+        newObject['ZoneFilename'] = struct.unpack('>120s', self.f.read(120))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['LowerLeft', 'UpperRight']
+        coordTypes = ['x', 'y']
+        
+        for varName in varNames:
+            for coordType in coordTypes:
+                newObject[coordType + varName] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['GridInterval'] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['NoPostsX'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['NoPostsY'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opMorphVertex(self, fileName = None):
@@ -1478,7 +1494,54 @@ class OpenFlight:
     
     def _opText(self, fileName = None):
         # Opcode 95
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Text'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(8, os.SEEK_CUR)
+        
+        newObject['Type'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['Type'] not in [-1, 0, 1, 2]:
+            raise Exception("Unable to determine type.")
+        
+        newObject['DrawType'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['DrawType'] not in [0, 1, 2, 3]:
+            raise Exception("Unable to determine draw type.")
+        
+        newObject['Justification'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['Justification'] not in [-1, 0, 1, 2]:
+            raise Exception("Unable to determine justification.")
+        
+        newObject['FloatingPointValue'] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['IntegerValue'] = struct.unpack('>i', self.f.read(4))[0]
+        
+        self.f.seek(20, os.SEEK_CUR)
+        
+        varNames = ['Flags', 'Colour', 'Colour2', 'Material', None, 'MaxLines', 'MaxCharacters', 'CurrentLength', 'NextLineNumber', 'LineNumberAtTop', 'LowInteger', 'HighInteger']
+        for varName in varNames:
+            if varNames is None:
+                self.f.seek(4, os.SEEK_CUR)
+            else:
+                newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['LowFloat'] = struct.unpack('>d', self.f.read(8))[0]
+        newObject['HighFloat'] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['LowerLeftCorner', 'UpperRightCorner']
+        for varName in varNames:
+            newObject[varName] = np.zeroes((1, 3))
+            for colIdx in range(3):
+                newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        newObject['FontName'] = struct.unpack('>120s', self.f.read(120))[0]
+        
+        varNames = ['DrawVertical', 'DrawItalic', 'DrawBold', 'DrawUnderline', 'LineStyle']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opSwitch(self, fileName = None):
