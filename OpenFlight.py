@@ -1529,7 +1529,7 @@ class OpenFlight:
         
         varNames = ['LowerLeftCorner', 'UpperRightCorner']
         for varName in varNames:
-            newObject[varName] = np.zeroes((1, 3))
+            newObject[varName] = np.zeros((1, 3))
             for colIdx in range(3):
                 newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
         
@@ -1805,8 +1805,178 @@ class OpenFlight:
     
     def _opTextureMapPalette(self, fileName = None):
         # Opcode 112
-        pass
-    
+        newObject = dict()
+        newObject['DataType'] = 'TextureMappingPalette'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        # Skip over the reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['TextureMappingIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['TextureMappingName'] = struct.unpack('>20s', self.f.read(20))[0]
+        newObject['TextureMappingType'] = struct.unpack('>I', self.f.read(4)))[0]
+        
+        if newObject['TextureMappingType'] not in [0, 1, 2, 4, 5, 6]:
+            raise Exception("Unable to determine texture mapping type.")
+        
+        newObject['WarpedFlag'] = struct.unpack('>i', self.f.read(4))[0]
+        
+        newObject['TransformationMatrix'] = np.zeros((4, 4))
+        for n in range(16):
+            # Enter elements of a matrix by going across their columns
+            newObject['TransformationMatrix'][int(n) / 4, n % 4] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Now branch depending on what texture map was recognised.
+        if newObject['TextureMappingType'] == 1:
+            # Parameters for 3 point put texture mapping
+            newObject['PutTextureToolState'] = struct.unpack('>i', self.f.read(4))[0]
+            if newObject['PutTextureToolState'] not in [0, 1, 2, 3]:
+                raise Exception("Unable to determine put texture tool state.")
+            
+            newObject['ActiveGeometryPoint'] = struct.unpack('>i', self.f.read(4))[0]            
+            if newObject['ActiveGeometryPoint'] not in [1, 2, 3]:
+                raise Exception("Unable to determine active geometry point.")
+            
+            varNames = ['LowerLeftCorner', 'UpperRightCorner']
+            for varName in varNames:
+                newObject[varName] = np.zeros((1, 3))
+                for colIdx in range(3):
+                    newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+            
+            newObject['UseRealWorldSizeFlags'] = []
+            for idx in range(3):
+                newObject['UseRealWorldSizeFlags'].append(struct.unpack('>i', self.f.read(4))[0])
+            
+            # Skip over reserved area
+            self.f.seek(4, os.SEEK_CUR)
+            
+            pointTypes = ['Texture', 'Geometry']
+            varNames = ['Origin', 'Alignment', 'Shear']
+            for pointType in pointTypes:
+                for varName in varNames:
+                    newObject[pointType + varName] = np.zeros((1, 3))
+                    for colIdx in range(3):
+                        newObject[pointType + varName][0, colIdx] = struct.unpack('>d', self.f.read(8))
+            
+            newObject['ActiveTexturePoint'] = struct.unpack('>i', self.f.read(4))[0]            
+            if newObject['ActiveTexturePoint'] not in [1, 2, 3]:
+                raise Exception("Unable to determine active texture point.")
+            
+            newObject['UVDisplayType'] = struct.unpack('>i', self.f.read(4))[0]            
+            if newObject['UVDisplayType'] not in [1, 2]:
+                raise Exception("Unable to determine UV display type.")
+            
+            varTypes = ['URepetition', 'VRepetition']
+            for varType in varTypes:
+                newObject[varType] = struct.unpack('>f', self.f.read(4))[0]
+        elif newObject['TextureMappingType'] == 2:
+            # Parameters for 4 point put texture mapping
+            newObject['PutTextureToolState'] = struct.unpack('>i', self.f.read(4))[0]
+            if newObject['PutTextureToolState'] not in [0, 1, 2, 3, 4]:
+                raise Exception("Unable to determine put texture tool state.")
+            
+            newObject['ActiveGeometryPoint'] = struct.unpack('>i', self.f.read(4))[0]            
+            if newObject['ActiveGeometryPoint'] not in [1, 2, 3, 4]:
+                raise Exception("Unable to determine active geometry point.")
+            
+            varNames = ['LowerLeftCorner', 'UpperRightCorner']
+            for varName in varNames:
+                newObject[varName] = np.zeros((1, 3))
+                for colIdx in range(3):
+                    newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+            
+            newObject['UseRealWorldSizeFlags'] = []
+            for idx in range(3):
+                newObject['UseRealWorldSizeFlags'].append(struct.unpack('>i', self.f.read(4))[0])
+            
+            # Skip over reserved area
+            self.f.seek(4, os.SEEK_CUR)
+            
+            pointTypes = ['Texture', 'Geometry']
+            varNames = ['Origin', 'Alignment', 'Shear', 'Perspective']
+            for pointType in pointTypes:
+                for varName in varNames:
+                    newObject[pointType + varName] = np.zeros((1, 3))
+                    for colIdx in range(3):
+                        newObject[pointType + varName][0, colIdx] = struct.unpack('>d', self.f.read(8))
+            
+            newObject['ActiveTexturePoint'] = struct.unpack('>i', self.f.read(4))[0]            
+            if newObject['ActiveTexturePoint'] not in [1, 2, 3, 4]:
+                raise Exception("Unable to determine active texture point.")
+            
+            newObject['UVDisplayType'] = struct.unpack('>i', self.f.read(4))[0]            
+            if newObject['UVDisplayType'] not in [1, 2]:
+                raise Exception("Unable to determine UV display type.")
+            
+            newObject['DepthScaleFactor'] = struct.unpack('>f', self.f.read(4))[0]
+            
+            self.f.seek(4, os.SEEK_CUR)
+            
+            newObject['FourPointTransformationMatrix'] = np.zeros((4, 4))
+            for n in range(16):
+                # Enter elements of a matrix by going across their columns
+                newObject['FourPointTransformationMatrix'][int(n) / 4, n % 4] = struct.unpack('>d', self.f.read(8))[0]
+            
+            varTypes = ['URepetition', 'VRepetition']
+            for varType in varTypes:
+                newObject[varType] = struct.unpack('>f', self.f.read(4))[0]
+        elif newObject['TextureMappingType'] == 4:
+            # Parameters for spherical project texture mapping
+            newObject['Scale'] = struct.unpack('>f', self.f.read(4))[0]
+            
+            self.f.seek(4, os.SEEK_CUR)
+            
+            newObject['Centre'] = np.zeros((1, 3))
+            for colIdx in range(3):
+                newObject['Centre'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+            
+            varNames = ['ScaleBoundingBox', 'MaxDimensionMappedGeometryBoundingBox']
+            for varName in varNames:
+                newObject[varName] =  struct.unpack('>f', self.f.read(4))[0]
+        elif newObject['TextureMappingType'] == 5:
+            # Parameters for radial project texture mapping
+            newObject['ActiveGeometryPoint'] = struct.unpack('>I', self.f.read(4))[0]
+            if newObject['ActiveGeometryPoint'] not in [1, 2]:
+                raise Exception('Unable to determine active geometry point.')
+            
+            self.f.seek(4, os.SEEK_CUR)
+            
+            varNames = ['RadialScale', 'CylinderLengthScale']
+            for varType in varTypes:
+                newObject[varType] = struct.unpack('>f', self.f.read(4))[0]
+            
+            newObject['XYTransformationMatrix'] = np.zeros((4, 4))
+            for n in range(16):
+                # Enter elements of a matrix by going across their columns
+                newObject['XYTransformationMatrix'][int(n) / 4, n % 4] = struct.unpack('>d', self.f.read(8))[0]
+            
+            varNames = ['EndPoint1', 'EndPoint2']
+            for varName in varNames:
+                newObject[varName] = np.zeros((1, 3))
+                for colIdx in range(3):
+                    newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        else:
+            print("Unable to handle to type of texture mapping type. Skipping this section.")
+        
+        # Now check to see if the warped mapping was enabled
+        if newObject['WarpedFlag'] == 1:
+            varNames = ['WarpedActiveGeometryPoint', 'WarpToolState']
+            for varName in varNames:
+                newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+            
+            # Skip over reserved area
+            self.f.seek(8, os.SEEK_CUR)
+            
+            varNames = ['WarpedFrom', 'WarpedTo']
+            for varName in varNames:
+                newObject[varName] = np.zeros((8, 2))
+                for rowIdx in range(8):
+                    for colIdx in range(2):
+                        newObject[varName][rowIdx, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        # Finally, save this variable to the stack
+        self._addObject(newObject)
     
     def _opMatPalette(self, fileName = None):
         # Opcode 113
@@ -1867,7 +2037,29 @@ class OpenFlight:
     
     def _opCurve(self, fileName = None):
         # Opcode 126
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Curve'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['CurveType'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['CurveType'] not in [4, 5, 6]:
+            raise Exception("Unable to determine curve type.")
+        
+        newObject['NumberOfControlPoints'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['Coordinates'] = np.zeros((newObject['NumberOfControlPoints'], 3))
+        for rowIdx in range(newObject['NumberOfControlPoints']):
+            for colIdx in range(3):
+                newObject['Coordinates'][rowIdx, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        self._addObject(newObject)
     
     
     def _opRoadConstruc(self, fileName = None):
