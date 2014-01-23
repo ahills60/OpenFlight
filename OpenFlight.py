@@ -1748,7 +1748,59 @@ class OpenFlight:
     
     def _opLightPt(self, fileName = None):
         # Opcode 111
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LightPoint'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        varNames = ['SurfaceMaterialCode', 'FeatureID']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>H', self.f.read(2))[0]
+        
+        varNames = ['BackColourBiDir', 'DisplayMode']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        # DisplayMode can only take a few values
+        if newObject['DisplayMode'] not in [0, 1, 2]:
+            raise Exception("Unable to determine display mode.")
+        
+        varNames = ['Intensity', 'BackIntensity', 'MinimumDefocus', 'MaximumDefocus']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = [('FadingMode', 'fading mode'), ('FogPunchMode', 'fog punch mode'), ('DirectionalMode', 'directional mode'), ('RangeMode', 'range mode')]
+        
+        for varName in varNames:
+            newObject[varName[0]] = struct.unpack('>I', self.f.read(4))[0]
+            if newObject[varName[0]] not in [0, 1]:
+                raise Exception("Unable to determine " + varName[1] + ".")
+        
+        varNames = ['MinPixelSize', 'MaxPixelSize', 'ActualSize', 'TransparentFalloffPixelSize', 'TransparentFalloffExponent', 'TransparentFalloffScalar', 'TransparentFalloffClamp', 'FogScalar', None, 'SizeDifferenceThreshold']
+        
+        for varName in varNames:
+            # Skip over reserved space
+            if varName is None:
+                self.f.seek(4, os.SEEK_CUR)
+            else:
+                newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['Directionality'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['Directionality'] not in [0, 1, 2]:
+            raise Exception("Unable to determine directionality.")
+        
+        varNames = ['HorizontalLobeAngle', 'VerticalLobeAngle', 'LobeRollAngle', 'DirectionalFalloffExponent', 'DirectionalAmbientIntensity', 'AnimationPeriod', 'AnimationPhaseDelay', 'AnimationEnabledPeriod', 'Significance']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['CalligraphicDrawOrder'] = struct.unpack('>i', self.f.read(4))[0]
+        
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['AxisOfRotation'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['AxisOfRotation'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opTextureMapPalette(self, fileName = None):
@@ -1868,7 +1920,19 @@ class OpenFlight:
     
     def _opIdxLightPt(self, fileName = None):
         # Opcode 130
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'IndexedLightPoint'
+        
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        varNames = ['AppearanceIndex', 'AnimationIndex', 'DrawOrder']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>i', self.f.read(4))[0]
+        
+        # Skip over reserved area:
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opLightPtSys(self, fileName = None):
