@@ -2207,30 +2207,94 @@ class OpenFlight:
     
     def _opExtFieldBool(self, fileName = None):
         # Opcode 149
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtensionFieldBoolean'
+        newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ExtensionFieldBoolean'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtFieldInt(self, fileName = None):
         # Opcode 150
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtensionFieldInteger'
+        newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ExtensionFieldInteger'] = struct.unpack('>i', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtFieldFloat(self, fileName = None):
         # Opcode 151
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtensionFieldFloat'
+        newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ExtensionFieldFloat'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtFieldDouble(self, fileName = None):
         # Opcode 152
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtensionFieldDouble'
+        newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ExtensionFieldDouble'] = struct.unpack('>d', self.f.read(8))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtFieldString(self, fileName = None):
         # Opcode 153
-        pass
+        newObject = dict()
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        newObject['DataType'] = 'ExtensionFieldString'
+        newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['StringLength'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ExtensionFieldString'] = struct.unpack('>' + (RecordLength - 12) + 's' , self.f.read(RecordLength - 12))[0].replace('\x00', '')
+        
+        # Check to see if there's a continuation (assuming this string is full)
+        while RecordLength == 0xffff:
+            iRead = struct.unpack('>H', self.f.read(2))[0]
+            
+            # Check for continuation Opcode
+            if iRead != 23:
+                # Not a continuation record. Rewind and return
+                self.f.seek(-2, os.SEEK_CUR)
+                break
+            
+            # If here, this is a continuation record.
+            RecordLength = struct.unpack('>H', self.f.read(2))[0]
+            
+            newObject['ExtensionFieldString'] += struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4)).replace('\x00', '')
+        
+        self._addObject(newObject)
     
     
     def _opExtFieldXMLString(self, fileName = None):
         # Opcode 154
-        pass
+        newObject = dict()
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        newObject['DataType'] = 'ExtensionFieldXMLString'
+        newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['StringLength'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ExtensionFieldXMLString'] = struct.unpack('>' + (RecordLength - 12) + 's' , self.f.read(RecordLength - 12))[0].replace('\x00', '')
+        
+        # Check to see if there's a continuation (assuming this string is full)
+        while RecordLength == 0xffff:
+            iRead = struct.unpack('>H', self.f.read(2))[0]
+            
+            # Check for continuation Opcode
+            if iRead != 23:
+                # Not a continuation record. Rewind and return
+                self.f.seek(-2, os.SEEK_CUR)
+                break
+            
+            # If here, this is a continuation record.
+            RecordLength = struct.unpack('>H', self.f.read(2))[0]
+            
+            newObject['ExtensionFieldXMLString'] += struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4)).replace('\x00', '')
+        
+        self._addObject(newObject)
     
