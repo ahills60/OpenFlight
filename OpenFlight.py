@@ -2012,57 +2012,183 @@ class OpenFlight:
     
     def _opExtMatHdr(self, fileName = None):
         # Opcode 135
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialHeader'
+        
+        newObject['MaterialIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['MaterialName'] = struct.unpack('>12s', self.f.read(12))[0]
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['ShadeModel'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['ShadeModel'] not in [0, 1, 2]:
+            raise Exception("Unable to determine shade model.")
+            
+        self._addObject(newObject)
     
     
     def _opExtMatAmb(self, fileName = None):
         # Opcode 136
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialAmbient'
+        
+        newObject['AmbientColour'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['AmbientColour'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['TextureIndexLayer', 'UVSetLayer']
+        
+        for layerIdx in range(4):
+            for varName in varNames:
+                newObject[varName + str(layerIdx)] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatDif(self, fileName = None):
         # Opcode 137
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialDiffuse'
+        
+        newObject['DiffuseColour'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['DiffuseColour'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['TextureIndexLayer', 'UVSetLayer']
+        
+        for layerIdx in range(4):
+            for varName in varNames:
+                newObject[varName + str(layerIdx)] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatSpc(self, fileName = None):
         # Opcode 138
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialSpecular'
+        
+        newObject['Shininess'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['SpecularColour'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['SpecularColour'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['TextureIndexLayer', 'UVSetLayer']
+        
+        for layerIdx in range(4):
+            for varName in varNames:
+                newObject[varName + str(layerIdx)] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatEms(self, fileName = None):
         # Opcode 139
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialEmissive'
+        
+        newObject['EmissiveColour'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['EmissiveColour'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['TextureIndexLayer', 'UVSetLayer']
+        
+        for layerIdx in range(4):
+            for varName in varNames:
+                newObject[varName + str(layerIdx)] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatAlp(self, fileName = None):
         # Opcode 140
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialAlpha'
+        
+        newObject['Alpha'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['TextureIndexLayer', 'UVSetLayer']
+        
+        for layerIdx in range(4):
+            for varName in varNames:
+                newObject[varName + str(layerIdx)] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['Quality'] = struct.unpack('>', self.f.read(4))[0]
+        if newObject['Quality'] not in [0, 1]:
+            raise Exception("Unable to determine quality.")
+        
+        self._addObject(newObject)
     
     
     def _opExtMatLightMap(self, fileName = None):
         # Opcode 141
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialLightMap'
+        
+        newObject['MaximumIntensity'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['TextureIndex', 'UVSet']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatNormMap(self, fileName = None):
         # Opcode 142
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialNormalMap'
+        
+        varNames = ['TextureIndex', 'UVSet']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatBumpMap(self, fileName = None):
         # Opcode 143
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialBumpMap'
+        
+        varNames = ['TextureIndex', 'UVSet', 'TangentUVSet', 'BinormalUVSet']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatShadowMap(self, fileName = None):
         # Opcode 145
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialShadowMap'
+        
+        newObject['MaximumIntensity'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['TextureIndex', 'UVSet']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opExtMatReflMap(self, fileName = None):
         # Opcode 147
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ExtendedMaterialReflectionMap'
+        
+        newObject['TintColour'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['TintColour'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['ReflectionTextureIndex', 'ReflectionUVSet', 'EnvironmentTextureIndex']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        # Skip over reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opExtGUIDPalette(self, fileName = None):
