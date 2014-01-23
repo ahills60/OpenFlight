@@ -1546,7 +1546,24 @@ class OpenFlight:
     
     def _opSwitch(self, fileName = None):
         # Opcode 96
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Switch'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        varNames = ['CurrentMask', 'NumberOfMasks', 'NumberOfWordsPerMask']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['MaskWords'] = []
+        for idx in range(varNames['NumberOfMasks'] * varNames['NumberOfWordsPerMask']):
+            newObject['MaskWords'].append(struct.unpack('>I', self.f.read(4))[0])
+        
+        self._addObject(newObject)
     
     
     def _opLineStylePalette(self, fileName = None):
@@ -1591,12 +1608,51 @@ class OpenFlight:
     
     def _opExtension(self, fileName = None):
         # Opcode 100
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'Extension'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        varNames = ['ASCIIID', 'SiteID']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(1)
+        
+        newObject['Revision'] = struct.unpack('>b', self.f.read(1))[0]
+        newObject['RecordCode'] = struct.unpack('>H', self.f.read(2))[0]
+        
+        newObject['ExtendedData'] = struct.unpack('>' + (RecordLength - 24) + 's', self.f.read(RecordLength - 24))[0].replace('\x00', '')
+        
+        self._addObject(newObject)
     
     
     def _opLightSrc(self, fileName = None):
         # Opcode 101
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LightSource'
+        
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['IndexIntoLightPalette'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['Position'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['Position'][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+        
+        varNames = ['Yaw', 'Pitch']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opLightSrcPalette(self, fileName = None):
