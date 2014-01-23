@@ -1937,17 +1937,77 @@ class OpenFlight:
     
     def _opLightPtSys(self, fileName = None):
         # Opcode 131
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LightPointSystem'
+        newObject['ASCIIID'] = struct.unpack('>8s', self.f.read(8))[0].replace('\x00', '')
+        newObject['Intensity'] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['AnimationState'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['AnimationState'] not in [0, 1, 2]:
+            raise Exception('Unable to determine animation state.')
+        
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        self._addObject(newObject)
     
     
     def _opIdxStr(self, fileName = None):
         # Opcode 132
-        pass
+        newObject = dict()
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        newObject['DataType'] = 'IndexedString'
+        newObject['Index'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ASCIIString'] = struct.unpack('>' + (RecordLength - 8) + 's', self.f.read(RecordLength - 8))[0].replace('\x00', '')
+        
+        self._addObject(newObject)
     
     
     def _opShaderPalette(self, fileName = None):
         # Opcode 133
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'ShaderPalette'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        newObject['ShaderIdx'] = struct.unpack('>I', self.f.read(4))[0]
+        newObject['ShaderType'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['ShaderType'] not in [0, 1, 2]:
+            raise Exception("Unable to determine shader type.")
+        
+        newObject['ShaderName'] = struct.unpack('>1024s', self.f.read(1024))[0].replace('\x00', '')
+        
+        # Now branch based on the shader type
+        if newObject['ShaderType'] == 0:
+            # Cg shader type
+            varNames = ['VertexProgramFilename', 'FragmentProgramFilename']
+            for varName in varNames:
+                newObject[varName] = struct.unpack('>1024s', self.f.read(1024))[0].replace('\x00', '')
+            
+            newObject['VertexProgramProfile'] = struct.unpack('>i', self.f.read(4))[0]
+            newObject['FragmentProgramProfile'] = struct.unpack('>i', self.f.read(4))[0]
+            
+            varNames = ['VertexProgramEntryPoint', 'FragmentProgramEntryPoint']
+            for varName in varNames:
+                newObject[varName] = struct.unpack('>256s', self.f.read(256))[0].replace('\x00', '')
+        elif newObject['ShaderType'] == 1:
+            print("CgFX shader type has not been implemented. Skipping...")
+            self.f.seek(RecordLength - 1036, os.SEEK_CUR)
+        else:
+            # Only OpenGL shading language left (i.e. type 2)
+            varNames = ['NumberOfVertexProgramFiles', 'NumberOfFragmentProgramFiles']
+            for varName in varNames:
+                newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+            
+            destVars = ['VertexProgramFiles', 'FragmentProgramFiles']
+            
+            # Note that the documentation states that these should be from 0 to the number of points
+            # I'm assuming this is not inclusive (i.e. 0 to N - 1)
+            for varName, destName in zip(varNames, destVars):
+                newObject[destName] = []
+                for idx in range(newObject[varName]):
+                    newObject[destName].append(struct.unpack('>1024s', self.f.read(1024))[0].replace('\x00', ''))
+        
+        self._addObject(newObject)
     
     
     def _opExtMatHdr(self, fileName = None):
