@@ -1871,7 +1871,7 @@ class OpenFlight:
         
         newObject['TextureMappingIdx'] = struct.unpack('>I', self.f.read(4))[0]
         newObject['TextureMappingName'] = struct.unpack('>20s', self.f.read(20))[0]
-        newObject['TextureMappingType'] = struct.unpack('>I', self.f.read(4)))[0]
+        newObject['TextureMappingType'] = struct.unpack('>I', self.f.read(4))[0]
         
         if newObject['TextureMappingType'] not in [0, 1, 2, 4, 5, 6]:
             raise Exception("Unable to determine texture mapping type.")
