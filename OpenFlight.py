@@ -1910,12 +1910,96 @@ class OpenFlight:
     
     def _opLightPtAppearPalette(self, fileName = None):
         # Opcode 128
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LightPointAppearancePalette'
+        
+        # Skip over reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['AppearanceName'] = struct.unpack('>256s', self.f.read(256))[0].replace('\x00', '')
+        newObject['AppearanceIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['SurfaceMaterialCode'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['FeatureID'] = struct.unpack('>H', self.f.read(2))[0]
+        newObject['BackColourBiDir'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['DisplayMode'] = struct.unpack('>H', self.f.read(4))[0]
+        if newObject['DisplayMode'] not in [0, 1, 2]:
+            raise Exception("Unable to determine display mode.")
+        
+        varNames = ['Intensity', 'BackIntensity', 'MinimumDefocus', 'MaximumDefocus']
+        for varName in varNames:
+            newObject[varNames] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['FadingMode', 'FogPunchMode', 'DirectionalMode', 'RangeMode']
+        for varName in varNames:
+            newObject[varNames] = struct.unpack('>I', self.f.read(4))[0]
+        
+        varNames = ['MinPixelSize', 'MaxPixelSize', 'ActualSize', 'TransparentFalloffPixelSize', 'TransparentFalloffExponent', 'TransparentFalloffScalar', 'TransparentFalloffClamp', 'FogScalar', 'SizeDifferenceThreshold']
+        for varName in varNames:
+            newObject[varNames] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['Directionality'] = struct.unpack('>I', self.f.read(4))[0]
+        if newObject['Directionality'] not in [0, 1, 2]:
+            raise Exception("Unable to determine directionality.")
+        
+        varNames = ['HorizontalLobeAngle', 'VerticalLobeAngle', 'DirectionalFalloffExponent', 'DirectionalAmbientIntensity', 'Significance']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['Flags'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        varNames = ['VisibilityRange', 'FadeRangeRatio', 'FadeInDuration', 'FadeOutDuration', 'LODRangeRatio', 'LODScale']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['TexturePatternIdx'] = struct.unpack('>h', self.f.read(2))[0]
+        
+        # Skip over reserved area
+        self.f.seek(2, os.SEEK_CUR)
+        
+        self._addObject(newObject)
     
     
     def _opLightPtAnimatPalette(self, fileName = None):
         # Opcode 129
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LightPointAnimationPalette'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        
+        # Skip over the reserved area
+        self.f.seek(4, os.SEEK_CUR)
+        
+        newObject['AnimationName'] = struct.unpack('>256s', self.f.read(256))[0].replace('\x00', '')
+        newObject['AnimationIndex'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        varNames = ['AnimationPeriod', 'AnimationPhaseDelay', 'AnimationEnabledPeriod']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>f', self.f.read(4))[0]
+        
+        newObject['AxisOfRotation'] = np.zeros((1, 3))
+        for colIdx in range(3):
+            newObject['AxisOfRotation'][0, colIdx] = struct.unpack('>f', self.f.read(4))[0]
+        
+        varNames = ['Flags', 'AnimationType', 'MorseCodeTiming', 'WordRate', 'CharacterRate']
+        for varName in varNames:
+            newObject[varName] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['MorseCodeString'] = struct.unpack('>1024s', self.f.read(1024))[0].replace('\x00', '')
+        newObject['NumberOfSequences'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        varNames = ['SequenceState', 'SequenceDuration', 'SequenceColour']
+        dataTypes = ['I', 'f', 'I']
+        
+        for varName in varNames:
+            newObject[varName] = []
+        
+        for idx in range(newObject['NumberOfSequences']):
+            for varName, dataType in zip(varNames, dataTypes):
+                newObject[varName].append(struct.unpack('>' + dataType, self.f.read(4))[0])
+        
+        self._addObject(newObject)
     
     
     def _opIdxLightPt(self, fileName = None):
