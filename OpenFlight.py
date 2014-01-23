@@ -1669,7 +1669,48 @@ class OpenFlight:
     
     def _opBoundConvexHull(self, fileName = None):
         # Opcode 107
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'BoundingConvexHull'
+        
+        RecordLength = struct.unpack('>H', self.f.read(2))[0]
+        newObject['NumberOfTriangles'] = struct.unpack('>I', self.f.read(4))[0]
+        
+        newObject['Vertex1'] = []
+        newObject['Vertex2'] = []
+        newObject['Vertex3'] = []
+        
+        # Read the vertex records:
+        for triangleIdx in range((RecordLength / 8) - 1):
+            for vertexIdx in range(1, 4):
+                # Represent x, y and z
+                tempVector = np.zeros((1, 3))
+                for colIdx in range(3):
+                    tempVector[0, colIdx] = struct.unpack('>d', self.f.read(8))
+                # Add this to the appropriate vector index
+                newObject['Vertex' + str(vertexIdx)].append(tempVector)
+        
+        # 65528 = Header (8) + (9*8) * 910; Continuation record = 65528 - 4:
+        while RecordLength >= 65524:
+            # Check to see if the next record is a continuation record:
+            iRead = struct.unpack('>H', self.f.read(2))[0]
+            
+            if iRead != 23:
+                # This is not a continuation record. Reverse and save variable
+                self.f.seek(-2, os.SEEK_CUR)
+                break
+            # This is a continuation record, so get the record length
+            RecordLength = struct.unpack('>H', self.f.read(2))[0]
+            
+            # Now continue appending to variable
+            for triangleIdx in range((RecordLength - 4) / 8):
+                for vertexIdx in range(1, 4):
+                    # Represent x, y and z:
+                    tempVector = np.zeros((1, 3))
+                    for colIdx in range(3):
+                        tempVector[0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+                    newObject['Vertex' + str(vertexIdx)].append(tempVector)
+        
+        self._addObject(newObject)
     
     
     def _opBoundVolCentre(self, fileName = None):
