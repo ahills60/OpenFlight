@@ -678,7 +678,7 @@ class OpenFlight:
         newObject = dict()
         newObject['DataType'] = 'Comment'
         
-        newObject['Text'] = struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
+        newObject['Text'] = struct.unpack('>' + str(RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
         
         while RecordLength == 0xFFFF:
             # Expect a continuation record
@@ -692,7 +692,7 @@ class OpenFlight:
             RecordLength = struct.unpack('>H', self.f.read(2))[0]
             
             # Now continue appending to variable
-            newObject['Text'] += struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
+            newObject['Text'] += struct.unpack('>' + str(RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
         self._addObject(newObject)
     
     
@@ -725,7 +725,7 @@ class OpenFlight:
                 self.f.seek(2, os.SEEK_CUR)
                 colIdx = struct.unpack('>H', self.f.read(2))[0]
                 self.f.seek(2, os.SEEK_CUR)
-                newObject['ColourNames'][colIdx] = stuct.unpack('>' + (nameLength - 8) + 's', self.f.read(nameLength - 8)).replace('\x00', '')[0]
+                newObject['ColourNames'][colIdx] = struct.unpack('>' + str(nameLength - 8) + 's', self.f.read(nameLength - 8))[0].replace('\x00', '')[0]
         
         self._addObject(newObject)
     
@@ -737,7 +737,7 @@ class OpenFlight:
         
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         
-        newObject['ASCIIID'] = struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
+        newObject['ASCIIID'] = struct.unpack('>' + str(RecordLength - 4) + 's', self.f.read(RecordLength - 4))[0].replace('\x00', '')
         self._addObject(newObject)
     
     
@@ -758,7 +758,7 @@ class OpenFlight:
         
         Components = ['i', 'j', 'k']
         for component in Components:
-            newObject[component] = stuct.unpack('>f', self.f.read(4))[0]
+            newObject[component] = struct.unpack('>f', self.f.read(4))[0]
         
         self._addObject(newObject)
     
@@ -1056,7 +1056,7 @@ class OpenFlight:
             for colIdx in range(3):
                 newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
         
-        newObject['Angle'] = stuct.unpack('>f', self.f.read(4))[0]
+        newObject['Angle'] = struct.unpack('>f', self.f.read(4))[0]
         
         self.f.seek(4, os.SEEK_CUR)
         
@@ -1150,9 +1150,9 @@ class OpenFlight:
         varNames = ['FromOrigin', 'FromAlign', 'FromTrack', 'ToOrigin', 'ToAlign', 'ToTrack']
         
         for varName in varNames:
-            newObject[varNames] = np.zeros((1, 3))
+            newObject[varName] = np.zeros((1, 3))
             for colIdx in range(3):
-                newObject[varNames][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
+                newObject[varName][0, colIdx] = struct.unpack('>d', self.f.read(8))[0]
         
         self._addObject(newObject)
     
@@ -1479,7 +1479,7 @@ class OpenFlight:
             # This is a sound palette data record
             newObject['Subtype'] = "Data"
             newObject['TotalLength'] = struct.unpack('>I', self.f.read(4))[0]
-            newObject['PackedFilenames'] = struct.unpack('>' + (RecordLength - 12) + 's', self.f.read(RecordLength - 12))[0]
+            newObject['PackedFilenames'] = struct.unpack('>' + str(RecordLength - 12) + 's', self.f.read(RecordLength - 12))[0]
         else:
             # This is not recognised.
             raise Exception("Unable to determine sound record subtype.")
@@ -1622,7 +1622,7 @@ class OpenFlight:
         newObject['Revision'] = struct.unpack('>b', self.f.read(1))[0]
         newObject['RecordCode'] = struct.unpack('>H', self.f.read(2))[0]
         
-        newObject['ExtendedData'] = struct.unpack('>' + (RecordLength - 24) + 's', self.f.read(RecordLength - 24))[0].replace('\x00', '')
+        newObject['ExtendedData'] = struct.unpack('>' + str(RecordLength - 24) + 's', self.f.read(RecordLength - 24))[0].replace('\x00', '')
         
         self._addObject(newObject)
     
@@ -2290,7 +2290,7 @@ class OpenFlight:
         RecordLength = struct.unpack('>H', self.f.read(2))[0]
         newObject['DataType'] = 'IndexedString'
         newObject['Index'] = struct.unpack('>I', self.f.read(4))[0]
-        newObject['ASCIIString'] = struct.unpack('>' + (RecordLength - 8) + 's', self.f.read(RecordLength - 8))[0].replace('\x00', '')
+        newObject['ASCIIString'] = struct.unpack('>' + str(RecordLength - 8) + 's', self.f.read(RecordLength - 8))[0].replace('\x00', '')
         
         self._addObject(newObject)
     
@@ -2584,7 +2584,7 @@ class OpenFlight:
         newObject['DataType'] = 'ExtensionFieldString'
         newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
         newObject['StringLength'] = struct.unpack('>I', self.f.read(4))[0]
-        newObject['ExtensionFieldString'] = struct.unpack('>' + (RecordLength - 12) + 's' , self.f.read(RecordLength - 12))[0].replace('\x00', '')
+        newObject['ExtensionFieldString'] = struct.unpack('>' + str(RecordLength - 12) + 's' , self.f.read(RecordLength - 12))[0].replace('\x00', '')
         
         # Check to see if there's a continuation (assuming this string is full)
         while RecordLength == 0xffff:
@@ -2599,7 +2599,7 @@ class OpenFlight:
             # If here, this is a continuation record.
             RecordLength = struct.unpack('>H', self.f.read(2))[0]
             
-            newObject['ExtensionFieldString'] += struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4)).replace('\x00', '')
+            newObject['ExtensionFieldString'] += struct.unpack('>' + str(RecordLength - 4) + 's', self.f.read(RecordLength - 4)).replace('\x00', '')
         
         self._addObject(newObject)
     
@@ -2611,7 +2611,7 @@ class OpenFlight:
         newObject['DataType'] = 'ExtensionFieldXMLString'
         newObject['GUIDPaletteIdx'] = struct.unpack('>I', self.f.read(4))[0]
         newObject['StringLength'] = struct.unpack('>I', self.f.read(4))[0]
-        newObject['ExtensionFieldXMLString'] = struct.unpack('>' + (RecordLength - 12) + 's' , self.f.read(RecordLength - 12))[0].replace('\x00', '')
+        newObject['ExtensionFieldXMLString'] = struct.unpack('>' + str(RecordLength - 12) + 's' , self.f.read(RecordLength - 12))[0].replace('\x00', '')
         
         # Check to see if there's a continuation (assuming this string is full)
         while RecordLength == 0xffff:
@@ -2626,7 +2626,7 @@ class OpenFlight:
             # If here, this is a continuation record.
             RecordLength = struct.unpack('>H', self.f.read(2))[0]
             
-            newObject['ExtensionFieldXMLString'] += struct.unpack('>' + (RecordLength - 4) + 's', self.f.read(RecordLength - 4)).replace('\x00', '')
+            newObject['ExtensionFieldXMLString'] += struct.unpack('>' + str(RecordLength - 4) + 's', self.f.read(RecordLength - 4)).replace('\x00', '')
         
         self._addObject(newObject)
     
