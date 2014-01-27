@@ -833,7 +833,7 @@ class OpenFlight:
         newObject = np.zeros((4, 4))
         for n in range(16):
             # Enter elements of a matrix by going across their columns
-            newObject[int(n) / 4, n % 4] = = self._readFloat()
+            newObject[int(n) / 4, n % 4] = self._readFloat()
         
         # Inject
         self._addObject(newObject)
@@ -845,7 +845,7 @@ class OpenFlight:
         
         Components = ['i', 'j', 'k']
         for component in Components:
-            newObject[component] = = self._readFloat()
+            newObject[component] = self._readFloat()
         
         self._addObject(newObject)
     
@@ -995,7 +995,7 @@ class OpenFlight:
         newObject['Normal'] = np.zeros((1, 3))
         # For i, j and k
         for colIdx in range(3):
-            newObject['Normal'][0, colIdx] = = self._readFloat()
+            newObject['Normal'][0, colIdx] = self._readFloat()
         
         newObject['PackedColour'] = self._readUInt()
         newObject['VertexColourIndex'] = self._readUInt()
@@ -2129,12 +2129,64 @@ class OpenFlight:
     
     def _opNameTable(self, fileName = None):
         # Opcode 114
-        pass
+        newObject = dict()
+        # Read the data to memeory and extract data as normal with modified
+        # read functions
+        self._readChunk()
+        
+        newObject['NumberOfNames'] = self._readInt(fromChunk = True)
+        newObject['NextAvailableNameIndex'] = self._readUShort(fromChunk = True)
+        
+        newObject['NameIndex'] = []
+        newObject['NameString'] = []
+        
+        for nameIndex in range(newObject['NumberOfNames']):
+            entryLength = self._readInt(fromChunk = True)
+            if entryLength > 86:
+                raise Exception('Name table entry ' + str(nameIndex) + ' exceeds the maximum allowable size.')
+            newObject['NameIndex'].append(self._readUInt(fromChunk = True))
+            newObject['NameString'].append(self._readString(entryLength - 6, fromChunk = True))
+        
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
+        
+        self._addObject(newObject)
     
     
     def _opCAT(self, fileName = None):
         # Opcode 115
-        pass
+        newObject = dict()s
+        newObject['DataType'] = "CAT"
+        RecordLength = self._readUShort()
+        self._skip(4)
+        newObject['IRColourCode'] = self._readInt()
+        newObject['DrawType'] = self._readInt()
+        if newObject['DrawType'] not in [0, 1, 2]:
+            raise Exception('Unable to determine draw type.')
+        newObject['TextureWhite'] = self._readBool()
+        self._skip(2)
+        newObject['ColourNameIdx'] = self._readUShort()
+        newObject['AltColourNameIdx'] = self._readUShort()
+        
+        varNames = ['DetailTexturePatternIdx', 'TexturePatternIdx', 'MaterialIdx']
+        
+        for varName in varNames:
+            newObject[varName] = self._readShort()
+            if newObject[varName] == -1:
+                newObject[varName] = None
+        
+        newObject['SurfaceMaterialCode'] = self._readShort()
+        newObject['IRMaterialCode'] = self._readUInt()
+        self._skip(8)
+        newObject['TextureMappingIdx'] = self._readShort()
+        self._skip(2)
+        newObject['PrimaryColourIdx'] = self._readUInt()
+        newObject['AltColourIdx'] = self._readUInt()
+        self._skip(12)
+        newObject['Flags'] = self._readUInt()
+        self._skip(4)
+        
+        self._addObject(newObject)
     
     
     def _opCATData(self, fileName = None):
