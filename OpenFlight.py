@@ -709,7 +709,6 @@ class OpenFlight:
             if len(self._InstanceStack) == 1:
                 self._RecordType = "Tree"
                 self._InstanceStack = []
-            pass
         else:
             raise Exception("Unable to determine stack type.")
     
@@ -871,7 +870,36 @@ class OpenFlight:
     
     def _opUVList(self, fileName = None):
         # Opcode 53
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'UVList'
+        
+        RecordLength = self._readUShort()
+        
+        newObject['AttributeMask'] = self._readUInt()
+        
+        mask = 0x00000001
+        
+        flags = [False] * 7
+        
+        for idx in range(7):
+            if newObject['AttributeMask'] & mask > 0:
+                flags[idx] = True
+            mask <<= 1
+        
+        Layers = ['Layer' + str(n + 1) for n in range(7) if flags[n]]
+        
+        varNames = ['U0', 'V0', 'U100', 'V100']
+        
+        for vertexIdx in range((RecordLength - 8) / (8 * len(Layers))):
+            vertexName = 'Vertex' + str(vertexIdx)
+            newObject[vertexName] = dict()
+            for layer in Layers:
+                newObject[vertexName][layer] = dict()
+                for varName in varNames:
+                    newObject[vertexName][layer][varName] = self._readFloat()
+        
+        # Finally, commit object to stack
+        self._addObject(newObject)
     
     
     def _opBSP(self, fileName = None):
