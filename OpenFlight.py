@@ -2155,7 +2155,7 @@ class OpenFlight:
     
     def _opCAT(self, fileName = None):
         # Opcode 115
-        newObject = dict()s
+        newObject = dict()
         newObject['DataType'] = "CAT"
         RecordLength = self._readUShort()
         self._skip(4)
@@ -2191,7 +2191,48 @@ class OpenFlight:
     
     def _opCATData(self, fileName = None):
         # Opcode 116
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'CATData'
+        
+        RecordLength = self._readUShort()
+        
+        subtype = self._readInt()
+        
+        if subtype == 1:
+            newObject['Subtype'] = 'CATDataHeader'
+            varNames = ['MaxNumber', 'ActualNumber', 'TotalLengthOfPackedFaceData']
+            for varName in varNames:
+                newObject[varName] = self._readInt()
+            self._skip(12)
+            
+            newObject['FaceIndex'] = []
+            newObject['FaceDataOffset'] = []
+            
+            for faceIdx in range(newObject['ActualNumber']):
+                newObject['FaceIndex'].append(self._readInt())
+                self._skip(4)
+                newObject['FaceDataOffset'].append(self._readInt())
+        elif subtype == 2:
+            newObject['Subtype'] = 'CATDataFace'
+            newObject['TotalLengthOfPackedFaceRecords'] = self._readInt()
+            
+            newObject['FaceRecords'] = []
+            
+            for faceIdx in range(newObject['TotalLengthOfPackedFaceRecords']):
+                faceRecord = dict()
+                
+                varNames = ['LevelOfDetail', 'ChildIndex1', 'ChildIndex2', 'ChildIndex3', 'ChildIndex4', 'IDLength']
+                
+                for varName in varNames:
+                    faceRecord[varName] = self._readInt()
+                
+                faceRecord['ID'] = self._readString(faceRecord['IDLength'])
+                
+                newObject['FaceRecords'].append(faceRecord)
+        else:
+            raise Exception('Unable to determine subtype.')
+        
+        self._addObject(newObject)
     
     
     def _opBoundHist(self, fileName = None):
