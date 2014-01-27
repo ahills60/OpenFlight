@@ -1417,13 +1417,68 @@ class OpenFlight:
             newObject['ShaderIdx'] = None
         
         self._addObject(newObject)
-        
-        
     
     
     def _opLocVertexPool(self, fileName = None):
         # Opcode 85
-        pass
+        newObject = dict()
+        # Read the data to memory and extract data as normal with modified
+        # read functions
+        self._readChunk()
+        
+        newObject['NumberOfVertices'] = self._readUInt(fromChunk = True)
+        newObject['AttributeMask'] = self._readUInt(fromChunk = True)
+        
+        mask = 0x01
+        
+        Flags = [False] * 12
+        
+        # Now process the attribute mask:
+        for idx in range(12):
+            if newObject['AttributeMask'] & mask > 0:
+                Flags[idx] = True
+            # Shift the mask left by one
+            mask <<= 1
+        
+        if Flags[1] and Flags[2]:
+            raise Exception("Unable to determine colour for vertex. Both colour index and RGBA colour are set.")
+        
+        varNames = ['UVBase']
+        varNames.extend(['UV' + str(idx) for idx in range(1, 8)])
+        
+        # Now only take those variable names that have been enabled
+        varNames = [filt[0] for filt in zip(varNames, Flags[4:]) if filt[1]]
+        
+        newObject['LocalVertexPool'] = []
+        for idx in range(newObject['NumberOfVertices']):
+            tempDict = dict()
+            
+            if Flags[0]:
+                tempDict['Coordinate'] = np.zeros((1, 3))
+                for colIdx in range(3):
+                    tempDict['Coordinate'][0, colIdx] = self._readDouble(fromChunk = True)
+            if Flags[1] or Flags[2]:
+                # Whilst the flags mean different things, they have similar construction
+                tempDict['Colour'] = np.zeros((1, 4))
+                for colIdx in range(4):
+                    tempDict['Colour'][0, colIdx] = self._readUChar(fromChunk = True)
+            if Flags[3]:
+                tempDict['Normal'] = np.zeros((1, 3))
+                for colIdx in range(3):
+                    tempDict['Normal'][0, colIdx] = self._readFloat(fromChunk = True)
+            for varName in varNames:
+                tempDict[varName] = np.zeros((1, 2))
+                for colIdx in range(2):
+                    tempDict[varName][0, colIdx] = self._readFloat(fromChunk = True)
+            
+            newObject['LocalVertexPool'].append(tempDict)
+        
+        tempDict = None
+        
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
+        
+        self._addObject(newObject)
     
     
     def _opMeshPrim(self, fileName = None):
