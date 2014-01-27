@@ -1567,7 +1567,43 @@ class OpenFlight:
     
     def _opLinkPalette(self, fileName = None):
         # Opcode 90
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'LinkagePalette'
+        
+        RecordLength = self._readUShort()
+        
+        # Next read the subtype
+        subtype = self._readInt()
+        
+        if subtype == 1:
+            newObject['Subtype'] = 'KeyTableHeader'
+            
+            varNames = ['MaxNumber', 'ActualNumber', 'TotalLength']
+            for varName in varNames:
+                newObject[varName] = self._readInt()
+            
+            # Skip over the reserved area:
+            self._skip(12)
+            
+            newObject['Records'] = []
+            
+            varNames = ['KeyValue', 'DataType', 'DataOffset']
+            
+            for idx in range(newObject['ActualNumber']):
+                tempDict = dict()
+                for varName in varNames:
+                    tempDict[varName] = self._readInt()
+                if varName['DataType'] not in [0x12120001, 0x12120002, 0x12120004]:
+                    raise Exception('Unable to determine data type for record ' + str(idx))
+                # Append this record to the record list:
+                newObject.append(varName)
+        if subtype == 2:
+            newObject['Subtype'] = 'KeyDataRecord'
+            newObject['DataLength'] = self._readInt()
+            newobject['PackedData'] = self.f.read(RecordLength - 12)
+        
+        # Finally, add this object to the stack:
+        self._addObject(newObject)
     
     
     def _opSound(self, fileName = None):
