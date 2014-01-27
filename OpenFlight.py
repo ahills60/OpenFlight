@@ -155,42 +155,101 @@ class OpenFlight:
         self._RecordType = 'Tree'
         self._TreeStack = []
         self._InstanceStack = []
+        self._Chunk = None
     
-    def _readString(self, size):
-        return struct.unpack('>' + str(size) + 's', self.f.read(size))[0].replace('\x00', '')
+    def _readString(self, size, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:size]
+            self._Chunk = self._Chunk[size:]
+        else:
+            data =  self.f.read(size)
+        return struct.unpack('>' + str(size) + 's', data)[0].replace('\x00', '')
     
-    def _readFloat(self):
-        return struct.unpack('>f', self.f.read(4))[0]
+    def _readFloat(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:4]
+            self._Chunk = self._Chunk[4:]
+        else:
+            data = self.f.read(4)
+        return struct.unpack('>f', data)[0]
     
-    def _readDouble(self):
-        return struct.unpack('>d', self.f.read(8))[0]
+    def _readDouble(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:8]
+            self._Chunk = self._Chunk[8:]
+        else:
+            data = self.f.read(8)
+        return struct.unpack('>d', data)[0]
     
-    def _readUShort(self):
-        return struct.unpack('>H', self.f.read(2))[0]
+    def _readUShort(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:2]
+            self._Chunk = self._Chunk[2:]
+        else:
+            data = self.f.read(2)
+        return struct.unpack('>H', data)[0]
     
-    def _readShort(self):
-        return struct.unpack('>h', self.f.read(2))[0]
+    def _readShort(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:2]
+            self._Chunk = self._Chunk[2:]
+        else:
+            data = self.f.read(2)
+        return struct.unpack('>h', data)[0]
     
-    def _readUInt(self):
-        return struct.unpack('>I', self.f.read(4))[0]
+    def _readUInt(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:4]
+            self._Chunk = self._Chunk[4:]
+        else:
+            data = self.f.read(4)
+        return struct.unpack('>I', data)[0]
     
-    def _readInt(self):
-        return struct.unpack('>i', self.f.read(4))[0]
+    def _readInt(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:4]
+            self._Chunk = self._Chunk[4:]
+        else:
+            data = self.f.read(4)
+        return struct.unpack('>i', data)[0]
     
-    def _readBool(self):
-        return struct.unpack('>?', self.f.read(1))[0]
+    def _readBool(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:1]
+            self._Chunk = self._Chunk[1:]
+        else:
+            data = self.f.read(1)
+        return struct.unpack('>?', data)[0]
     
-    def _readUChar(self):
-        return struct.unpack('>B', self.f.read(1))[0]
+    def _readUChar(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:1]
+            self._Chunk = self._Chunk[1:]
+        else:
+            data = self.f.read(1)
+        return struct.unpack('>B', data)[0]
     
-    def _readSChar(self):
-        return struct.unpack('>b', self.f.read(1))[0]
+    def _readSChar(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:1]
+            self._Chunk = self._Chunk[1:]
+        else:
+            data = self.f.read(1)
+        return struct.unpack('>b', data)[0]
     
-    def _readChar(self):
-        return struct.unpack('>c', self.f.read(1))[0]
+    def _readChar(self, fromChunk = False):
+        if fromChunk:
+            data = self._Chunk[:1]
+            self._Chunk = self._Chunk[1:]
+        else:
+            data = self.f.read(1)
+        return struct.unpack('>c', data)[0]
     
-    def _skip(self, noBytes):
-        self.f.seek(noBytes, os.SEEK_CUR)
+    def _skip(self, noBytes, fromChunk = False):
+        if fromChunk:
+            self._Chunk = self._Chunk[noBytes:]
+        else:
+            self.f.seek(noBytes, os.SEEK_CUR)
     
     def _check_filesize(self, fileName):
         fileSize = os.stat(fileName).st_size
@@ -2666,3 +2725,43 @@ class OpenFlight:
         
         self._addObject(newObject)
     
+    
+    def _readChunk(self):
+        """
+            This function reads a block + a continuous block.
+            This is an internal function.
+        """
+        
+        # The very first element ought to be a record length for the primary header
+        # block and this should be followed by the continous blocks.
+        RecordLength = self._readUShort()
+        
+        # Then read everything except the header.
+        chunk = self.f.read(RecordLength - 4)
+        
+        # Now determine if the next block is a continuous opcode
+        opCode = self._readUShort()
+        
+        while opCode == 23:
+            # See how much data needs to be extracted
+            RecordLength = self._readUShort()
+            
+            # Append this record to the previous
+            chunk += self.f.read(RecordLength - 4)
+            
+            # Now read the next opCode
+            opCode = self._readUShort()
+        # Previous instruction was to read the next opCode. If here, opCode was not a
+        # continuous record, so back two bytes.
+        self._skip(-2)
+        # Save the chunk to a global variable
+        self._Chunk = chunk
+    
+    
+    def _checkTextureFile(self, fileName = None):
+        pass
+    
+    
+    def _parseTextureFile(self, fileName = None):
+        pass
+        
