@@ -768,26 +768,18 @@ class OpenFlight:
     
     def _opComment(self, fileName = None):
         # Opcode 31
-        RecordLength = self._readUShort()
-        
         newObject = dict()
+        # Read the data to memory and extract data as normal with modified
+        # read functions
+        self._readChunk()
         newObject['DataType'] = 'Comment'
         
-        newObject['Text'] = self._readString(RecordLength - 4)
+        # Read the string to the end of the chunk
+        newObject['Text'] = self._readString(len(self._Chunk), fromChunk = True)
         
-        while RecordLength == 0xFFFF:
-            # Expect a continuation record
-            iRead = self._readUShort()
-            
-            if iRead != 23:
-                # This is not a continuation record. Reverse and save variable
-                self._skip(-2)
-                break
-            # This is a continuation record, so get the record length
-            RecordLength = self._readUShort()
-            
-            # Now continue appending to variable
-            newObject['Text'] += self._readString(RecordLength - 4)
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
+        
         self._addObject(newObject)
     
     
@@ -1064,29 +1056,21 @@ class OpenFlight:
     def _opVertexList(self, fileName = None):
         # Opcode 72
         newObject = dict()
+        # Read the data to memory and extract data as normal with modified
+        # read functions.
+        self._readChunk()
+        
         newObject['Datatype'] = "VertexList"
-        RecordLength = self._readUShort()
+        RecordLength = len(self._Chunk)
         
         newObject['ByteOffset'] = []
         
-        for verIdx in range((RecordLength / 4) - 1):
-            newObject['ByteOffset'].append(self._readUInt())
+        for verIdx in range((RecordLength / 4)):
+            newObject['ByteOffset'].append(self._readUInt(fromChunk = True))
         
-        # The below record length: 16383 * 4 = 65532 (0xFFFC) as max 65535 is (0xFFFF)
-        while RecordLength >= 0xfffc:
-            # Expect a continuation record
-            iRead = self._readUShort()
-            
-            if iRead != 23:
-                # This is not a continuation record. Reverse and save variable
-                self._skip(-2)
-                break
-            # This is a continuation record, so get the record length
-            RecordLength = self._readUShort()
-            
-            # Now continue appending to variable
-            for verIdx in range((RecordLength / 4) - 1):
-                newObject['ByteOffset'].append(self._readUInt())
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
+        
         self._addObject(newObject)
     
     
@@ -1704,20 +1688,24 @@ class OpenFlight:
     def _opExtension(self, fileName = None):
         # Opcode 100
         newObject = dict()
+        # Read the data to memory and extract data as normal with modified
+        # read functions
+        self._readChunk()
         newObject['DataType'] = 'Extension'
-        
-        RecordLength = self._readUShort()
         
         varNames = ['ASCIIID', 'SiteID']
         for varName in varNames:
-            newObject[varName] = self._readString(8)
+            newObject[varName] = self._readString(8, fromChunk = True)
         
-        self._skip(1)
+        self._skip(1, fromChunk = True)
         
-        newObject['Revision'] = self._readSChar()
-        newObject['RecordCode'] = self._readUShort()
+        newObject['Revision'] = self._readSChar(fromChunk = True)
+        newObject['RecordCode'] = self._readUShort(fromChunk = True)
         
-        newObject['ExtendedData'] = self._readString(RecordLength - 24)
+        newObject['ExtendedData'] = self._readString(len(self._Chunk), fromChunk = True)
+        
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
         
         self._addObject(newObject)
     
@@ -1821,45 +1809,32 @@ class OpenFlight:
     def _opBoundConvexHull(self, fileName = None):
         # Opcode 107
         newObject = dict()
+        # Read the data to memory and extract data as normal with modified
+        # read functions
+        self._readChunk()
+        
         newObject['DataType'] = 'BoundingConvexHull'
         
-        RecordLength = self._readUShort()
-        newObject['NumberOfTriangles'] = self._readUInt()
+        newObject['NumberOfTriangles'] = self._readUInt(fromChunk = True)
         
         newObject['Vertex1'] = []
         newObject['Vertex2'] = []
         newObject['Vertex3'] = []
         
+        RecordLength = len(self._Chunk)
+        
         # Read the vertex records:
-        for triangleIdx in range((RecordLength / 8) - 1):
+        for triangleIdx in range(RecordLength / 8):
             for vertexIdx in range(1, 4):
                 # Represent x, y and z
                 tempVector = np.zeros((1, 3))
                 for colIdx in range(3):
-                    tempVector[0, colIdx] = self._readDouble()
+                    tempVector[0, colIdx] = self._readDouble(fromChunk = True)
                 # Add this to the appropriate vector index
                 newObject['Vertex' + str(vertexIdx)].append(tempVector)
         
-        # 65528 = Header (8) + (9*8) * 910; Continuation record = 65528 - 4:
-        while RecordLength >= 65524:
-            # Check to see if the next record is a continuation record:
-            iRead = self._readUShort()
-            
-            if iRead != 23:
-                # This is not a continuation record. Reverse and save variable
-                self._skip(-2)
-                break
-            # This is a continuation record, so get the record length
-            RecordLength = self._readUShort()
-            
-            # Now continue appending to variable
-            for triangleIdx in range((RecordLength - 4) / 8):
-                for vertexIdx in range(1, 4):
-                    # Represent x, y and z:
-                    tempVector = np.zeros((1, 3))
-                    for colIdx in range(3):
-                        tempVector[0, colIdx] = self._readDouble()
-                    newObject['Vertex' + str(vertexIdx)].append(tempVector)
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
         
         self._addObject(newObject)
     
@@ -2675,26 +2650,17 @@ class OpenFlight:
     def _opExtFieldString(self, fileName = None):
         # Opcode 153
         newObject = dict()
-        RecordLength = self._readUShort()
-        newObject['DataType'] = 'ExtensionFieldString'
-        newObject['GUIDPaletteIdx'] = self._readUInt()
-        newObject['StringLength'] = self._readUInt()
-        newObject['ExtensionFieldString'] = self._readString(RecordLength - 12)
         
-        # Check to see if there's a continuation (assuming this string is full)
-        while RecordLength == 0xffff:
-            iRead = self._readUShort()
-            
-            # Check for continuation Opcode
-            if iRead != 23:
-                # Not a continuation record. Rewind and return
-                self._skip(-2)
-                break
-            
-            # If here, this is a continuation record.
-            RecordLength = self._readUShort()
-            
-            newObject['ExtensionFieldString'] += self._readString(RecordLength - 4)
+        # Read the data to memory and extract data as normal with modified
+        # read functions
+        self._readChunk()
+        newObject['DataType'] = 'ExtensionFieldString'
+        newObject['GUIDPaletteIdx'] = self._readUInt(fromChunk = True)
+        newObject['StringLength'] = self._readUInt(fromChunk = True)
+        newObject['ExtensionFieldString'] = self._readString(newObject['StringLength'], fromChunk = True)
+        
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
         
         self._addObject(newObject)
     
@@ -2702,27 +2668,18 @@ class OpenFlight:
     def _opExtFieldXMLString(self, fileName = None):
         # Opcode 154
         newObject = dict()
-        RecordLength = self._readUShort()
+        
+        # Read the data to memory and extract data as normal with modified
+        # read functions
+        self._readChunk()
+        
         newObject['DataType'] = 'ExtensionFieldXMLString'
-        newObject['GUIDPaletteIdx'] = self._readUInt()
-        newObject['StringLength'] = self._readUInt()
-        newObject['ExtensionFieldXMLString'] = self._readString(RecordLength - 12)
+        newObject['GUIDPaletteIdx'] = self._readUInt(fromChunk = True)
+        newObject['StringLength'] = self._readUInt(fromChunk = True)
+        newObject['ExtensionFieldXMLString'] = self._readString(newObject['StringLength'], fromChunk = True)
         
-        # Check to see if there's a continuation (assuming this string is full)
-        while RecordLength == 0xffff:
-            iRead = self._readUShort()
-            
-            # Check for continuation Opcode
-            if iRead != 23:
-                # Not a continuation record. Rewind and return
-                self._skip(-2)
-                break
-            
-            # If here, this is a continuation record.
-            RecordLength = self._readUShort()
-            
-            newObject['ExtensionFieldXMLString'] += self._readString(RecordLength - 4)
-        
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
         self._addObject(newObject)
     
     
