@@ -1428,7 +1428,34 @@ class OpenFlight:
     
     def _opMeshPrim(self, fileName = None):
         # Opcode 86
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'MeshPrimitive'
+        
+        # Read the data to memory and extract data as normal with modified
+        # read functions
+        self._readChunk()
+        
+        newObject['PrimitiveType'] = self._readShort(fromChunk = True)
+        indexSize = self._readUShort(fromChunk = True)
+        
+        if indexSize not in [1, 2, 4]:
+            raise Exception("Unable to determine the index size.")
+        
+        functions = {1: self._readSChar, 2: self._readShort, 4: self._readInt}
+        
+        readFunction = functions[indexSize]
+        
+        newObject['VertexCount'] = self._readUInt(fromChunk = True)
+        
+        newObject['VertexIndex'] = []
+        
+        for idx in range(newObject['VertexCount']):
+            newObject['VertexIndex'].append(readFunction(fromChunk = True))
+        
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
+        
+        self._addObject(newObject)
     
     
     def _opRoadSeg(self, fileName = None):
@@ -1463,7 +1490,24 @@ class OpenFlight:
     
     def _opMorphVertex(self, fileName = None):
         # Opcode 89
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'MorphVertexList'
+        
+        # Read the data to memory and extract data as normal with modified
+        # read fucntions
+        self._readChunk()
+        
+        newObject['Offset0'] = []
+        newObject['Offset100'] = []
+        
+        for idx in range(len(self._Chunk) / 8):
+            newObject['Offset0'].append(self._readInt(fromChunk = True))
+            newObject['Offset100'].append(self._readInt(fromChunk = True))
+        
+        # The data chunk should be processed. Reset the variable to None:
+        self._Chunk = None
+        
+        self._addObject(newObject)
     
     
     def _opLinkPalette(self, fileName = None):
