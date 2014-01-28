@@ -2975,7 +2975,7 @@ class OpenFlight:
         if fileName is None:
             raise IOError('No texture filename specified.')
         
-        if fileName[0] = '.':
+        if fileName[0] == '.':
             # This is based on a relative path. Extract the contents of the stored filename:
             if self.fileName is None:
                 raise IOError('Attribute file uses relative path names. Unable to determine relative path.')
