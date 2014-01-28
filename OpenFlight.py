@@ -555,14 +555,14 @@ class OpenFlight:
         else:
             raise Exception("Record type not recognised.")
     
-    def _opReserved(self, fileName = None):
+    def _opReserved(self):
         pass
     
-    def _opHeader(self, fileName = None):
+    def _opHeader(self):
         # Opcode 1
         raise Exception("Another header found in file.")
     
-    def _opGroup(self, fileName = None):
+    def _opGroup(self):
         # Opcode 2
         newObject = dict()
         
@@ -587,7 +587,7 @@ class OpenFlight:
         # Finally inject object into tree
         self._addObject(newObject)
     
-    def _opObject(self, fileName = None):
+    def _opObject(self):
         # Opcode 4
         newObject = dict()
         newObject['DataType'] = "Object"
@@ -602,7 +602,7 @@ class OpenFlight:
         
         self._addObject(newObject)
     
-    def _opFace(self, fileName = None):
+    def _opFace(self):
         # Opcode 5
         newObject = dict()
         newObject['DataType'] = "Face"
@@ -679,7 +679,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opPush(self, fileName = None):
+    def _opPush(self):
         # Opcode 10
         if self._RecordType == "Tree":
             node = self.Records["Tree"]
@@ -696,7 +696,7 @@ class OpenFlight:
         else:
             raise Exception("Unable to determine stack type.")
     
-    def _opPop(self, fileName = None):
+    def _opPop(self):
         # Opcode 11
         if self._RecordType == "Tree":
             if len(self._TreeStack) == 0:
@@ -712,7 +712,7 @@ class OpenFlight:
         else:
             raise Exception("Unable to determine stack type.")
     
-    def _opDoF(self, fileName = None):
+    def _opDoF(self):
         # Opcode 14
         newObject = dict()
         newObject['DataType'] = 'DegreeOfFreedom'
@@ -741,31 +741,31 @@ class OpenFlight:
         
         self._addObject(newObject)
     
-    def _opPushSubface(self, fileName = None):
+    def _opPushSubface(self):
         # Opcode 19
         pass
     
-    def _opPopSubface(self, fileName = None):
+    def _opPopSubface(self):
         # Opcode 20
         pass
     
-    def _opPushExtension(self, fileName = None):
+    def _opPushExtension(self):
         # Opcode 21
         pass
     
     
-    def _opPopExtension(self, fileName = None):
+    def _opPopExtension(self):
         # Opcode 22
         pass
     
     
-    def _opContinuation(self, fileName = None):
+    def _opContinuation(self):
         # Opcode 23
         # This function will require special handling as a continuation record extends previous records.
         raise Exception("Unexpected continuation record. This should have been handled by the " + self._OpCodes[self._PreviousOpCode][2] + " function.")
     
     
-    def _opComment(self, fileName = None):
+    def _opComment(self):
         # Opcode 31
         newObject = dict()
         # Read the data to memory and extract data as normal with modified
@@ -782,7 +782,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opColourPalette(self, fileName = None):
+    def _opColourPalette(self):
         # Opcode 32
         
         # Read the record length
@@ -816,7 +816,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLongID(self, fileName = None):
+    def _opLongID(self):
         # Opcode 33
         newObject = dict()
         newObject['DataType'] = 'LongID'
@@ -827,7 +827,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opMatrix(self, fileName = None):
+    def _opMatrix(self):
         # Opcode 49        
         newObject = np.zeros((4, 4))
         for n in range(16):
@@ -837,7 +837,7 @@ class OpenFlight:
         # Inject
         self._addObject(newObject)
     
-    def _opVector(self, fileName = None):
+    def _opVector(self):
         # Opcode 50
         newObject = dict()
         newObject['DataType'] = 'Vector'
@@ -849,7 +849,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opMultitexture(self, fileName = None):
+    def _opMultitexture(self):
         # Opcode 52
         RecordLength = self._readUShort()
         
@@ -868,7 +868,7 @@ class OpenFlight:
         
         self._addObject(newObject)
     
-    def _opUVList(self, fileName = None):
+    def _opUVList(self):
         # Opcode 53
         newObject = dict()
         newObject['DataType'] = 'UVList'
@@ -902,7 +902,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBSP(self, fileName = None):
+    def _opBSP(self):
         # Opcode 55
         newObject = dict()
         newObject['DataType'] = 'BinarySeparatingPlane'
@@ -917,7 +917,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opReplicate(self, fileName = None):
+    def _opReplicate(self):
         # Opcode 60
         newObject = dict()
         newObject['DataType'] = 'Replicate'
@@ -930,7 +930,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opInstRef(self, fileName = None):
+    def _opInstRef(self):
         # Opcode 61        
         # Read instance number
         instance = self._readUInt()
@@ -942,7 +942,7 @@ class OpenFlight:
         self._addObject(self.Records["Instances"][instance])
     
     
-    def _opInstDef(self, fileName = None):
+    def _opInstDef(self):
         # Opcode 62
         # Firstly, set the record type to instance definition
         self._RecordType = "Instances"
@@ -957,7 +957,7 @@ class OpenFlight:
         self.Records["Instances"][instance] = []
         self._InstanceStack.append(instance)
     
-    def _opExtRef(self, fileName = None):
+    def _opExtRef(self):
         # Opcode 63
         newObject = dict()
         newObject['Datatype'] = "ExternalReference"
@@ -971,7 +971,7 @@ class OpenFlight:
         # Inject into tree
         self._addObject(newObject)
     
-    def _opTexturePalette(self, fileName = None):
+    def _opTexturePalette(self):
         # Opcode 64
         newObject = dict()
         newObject['Datatype'] = "TexturePalette"
@@ -984,7 +984,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opVertexPalette(self, fileName = None):
+    def _opVertexPalette(self):
         # Opcode 67
         newObject = dict()
         newObject['Datatype'] = "VertexPalette"
@@ -993,7 +993,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opVertexColour(self, fileName = None):
+    def _opVertexColour(self):
         # Opcode 68
         newObject = dict()
         newObject['Datatype'] = "VertexColour"
@@ -1010,7 +1010,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opVertexColNorm(self, fileName = None):
+    def _opVertexColNorm(self):
         # Opcode 69
         newObject = dict()
         newObject['Datatype'] = "VertexColourWithNormal"
@@ -1033,7 +1033,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opVertexColNormUV(self, fileName = None):
+    def _opVertexColNormUV(self):
         # Opcode 70
         newObject = dict()
         newObject['Datatype'] = "VertexColourWithNormalUV"
@@ -1060,7 +1060,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opVertexColUV(self, fileName = None):
+    def _opVertexColUV(self):
         # Opcode 71
         newObject = dict()
         newObject['Datatype'] = "VertexColourWithUV"
@@ -1081,7 +1081,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opVertexList(self, fileName = None):
+    def _opVertexList(self):
         # Opcode 72
         newObject = dict()
         # Read the data to memory and extract data as normal with modified
@@ -1102,7 +1102,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLoD(self, fileName = None):
+    def _opLoD(self):
         # Opcode 73
         newObject = dict()
         newObject['DataType'] = 'LevelOfDetail'
@@ -1129,7 +1129,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBoundingBox(self, fileName = None):
+    def _opBoundingBox(self):
         # Opcode 74
         
         newObject = dict()
@@ -1149,7 +1149,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opRotEdge(self, fileName = None):
+    def _opRotEdge(self):
         # Opcode 76
         newObject = dict()
         newObject['DataType'] = 'RotateAboutEdge'
@@ -1170,7 +1170,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opTranslate(self, fileName = None):
+    def _opTranslate(self):
         # Opcode 78
         newObject = dict()
         newObject['DataType'] = 'Translate'
@@ -1187,7 +1187,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opScale(self, fileName = None):
+    def _opScale(self):
         # Opcode 79
         newObject = dict()
         newObject['DataType'] = 'Scale'
@@ -1207,7 +1207,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opRotPoint(self, fileName = None):
+    def _opRotPoint(self):
         # Opcode 80
         newObject = dict()
         newObject['DataType'] = 'RotateAboutPoint'
@@ -1225,7 +1225,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opRotScPoint(self, fileName = None):
+    def _opRotScPoint(self):
         # Opcode 81
         newObject = dict()
         newObject['DataType'] = 'RotateScaleToPoint'
@@ -1247,7 +1247,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opPut(self, fileName = None):
+    def _opPut(self):
         # Opcode 82
         newObject = dict()
         newObject['DataType'] = 'Put'
@@ -1263,7 +1263,7 @@ class OpenFlight:
         
         self._addObject(newObject)
     
-    def _opEyeTrackPalette(self, fileName = None):
+    def _opEyeTrackPalette(self):
         # Opcode 83
         newObject = dict()
         newObject['DataType'] = 'EyepointAndTrackplanePalette'
@@ -1364,7 +1364,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opMesh(self, fileName = None):
+    def _opMesh(self):
         # Opcode 84
         newObject = dict()
         newObject['DataType'] = 'Mesh'
@@ -1447,7 +1447,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLocVertexPool(self, fileName = None):
+    def _opLocVertexPool(self):
         # Opcode 85
         newObject = dict()
         # Read the data to memory and extract data as normal with modified
@@ -1509,7 +1509,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opMeshPrim(self, fileName = None):
+    def _opMeshPrim(self):
         # Opcode 86
         newObject = dict()
         newObject['DataType'] = 'MeshPrimitive'
@@ -1541,7 +1541,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opRoadSeg(self, fileName = None):
+    def _opRoadSeg(self):
         # Opcode 87
         newObject = dict()
         newObject['DataType'] = "RoadSegment"
@@ -1550,7 +1550,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opRoadZone(self, fileName = None):
+    def _opRoadZone(self):
         # Opcode 88
         newObject = dict()
         newObject['DataType'] = 'RoadZone'
@@ -1571,7 +1571,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opMorphVertex(self, fileName = None):
+    def _opMorphVertex(self):
         # Opcode 89
         newObject = dict()
         newObject['DataType'] = 'MorphVertexList'
@@ -1593,7 +1593,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLinkPalette(self, fileName = None):
+    def _opLinkPalette(self):
         # Opcode 90
         newObject = dict()
         newObject['DataType'] = 'LinkagePalette'
@@ -1634,7 +1634,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opSound(self, fileName = None):
+    def _opSound(self):
         # Opcode 91
         newObject = dict()
         newObject['DataType'] = 'Sound'
@@ -1666,7 +1666,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opRoadPath(self, fileName = None):
+    def _opRoadPath(self):
         # Opcode 92
         newObject = dict()
         newObject['DataType'] = 'RoadPath'
@@ -1690,7 +1690,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opSoundPalette(self, fileName = None):
+    def _opSoundPalette(self):
         # Opcode 93
         newObject = dict()
         newObject['DataType'] = 'SoundPaletteData'
@@ -1728,13 +1728,13 @@ class OpenFlight:
         
         self._addObject(newObject)
     
-    def _opGenMatrix(self, fileName = None):
+    def _opGenMatrix(self):
         # Opcode 94
         # This is the same as the matrix command, so call the matrix function
         self._opMatrix(fileName)
     
     
-    def _opText(self, fileName = None):
+    def _opText(self):
         # Opcode 95
         newObject = dict()
         newObject['DataType'] = 'Text'
@@ -1786,7 +1786,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opSwitch(self, fileName = None):
+    def _opSwitch(self):
         # Opcode 96
         newObject = dict()
         newObject['DataType'] = 'Switch'
@@ -1808,7 +1808,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLineStylePalette(self, fileName = None):
+    def _opLineStylePalette(self):
         # Opcode 97
         newObject = dict()
         newObject['DataType'] = 'LineStylePalette'
@@ -1819,7 +1819,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opClipRegion(self, fileName = None):
+    def _opClipRegion(self):
         # Opcode 98
         newObject = dict()
         newObject['DataType'] = 'ClipRegion'
@@ -1848,7 +1848,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtension(self, fileName = None):
+    def _opExtension(self):
         # Opcode 100
         newObject = dict()
         # Read the data to memory and extract data as normal with modified
@@ -1873,7 +1873,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLightSrc(self, fileName = None):
+    def _opLightSrc(self):
         # Opcode 101
         newObject = dict()
         newObject['DataType'] = 'LightSource'
@@ -1901,7 +1901,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLightSrcPalette(self, fileName = None):
+    def _opLightSrcPalette(self):
         # Opcode 102
         newObject = dict()
         newObject['DataType'] = 'LightSourcePalette'
@@ -1940,7 +1940,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBoundSphere(self, fileName = None):
+    def _opBoundSphere(self):
         # Opcode 105
         newObject = dict()
         newObject['DataType'] = 'BoundingSphere'
@@ -1954,7 +1954,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBoundCylinder(self, fileName = None):
+    def _opBoundCylinder(self):
         # Opcode 106
         newObject = dict()
         newObject['DataType'] = 'BoundingCylinder'
@@ -1969,7 +1969,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBoundConvexHull(self, fileName = None):
+    def _opBoundConvexHull(self):
         # Opcode 107
         newObject = dict()
         # Read the data to memory and extract data as normal with modified
@@ -2002,7 +2002,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBoundVolCentre(self, fileName = None):
+    def _opBoundVolCentre(self):
         # Opcode 108
         newObject = dict()
         newObject['DataType'] = 'BoundingVolumeCentre'
@@ -2019,7 +2019,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBoundVolOrientation(self, fileName = None):
+    def _opBoundVolOrientation(self):
         # Opcode 109
         newObject = dict()
         newObject['DataType'] = 'BoundingVolumeOrientation'
@@ -2035,7 +2035,7 @@ class OpenFlight:
         # Finally, add the object to the stack
         self._addObject(newObject)
     
-    def _opLightPt(self, fileName = None):
+    def _opLightPt(self):
         # Opcode 111
         newObject = dict()
         newObject['DataType'] = 'LightPoint'
@@ -2092,7 +2092,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opTextureMapPalette(self, fileName = None):
+    def _opTextureMapPalette(self):
         # Opcode 112
         newObject = dict()
         newObject['DataType'] = 'TextureMappingPalette'
@@ -2267,7 +2267,7 @@ class OpenFlight:
         # Finally, save this variable to the stack
         self._addObject(newObject)
     
-    def _opMatPalette(self, fileName = None):
+    def _opMatPalette(self):
         # Opcode 113
         newObject = dict()
         newObject['DataType'] = "MaterialPalette"
@@ -2290,7 +2290,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opNameTable(self, fileName = None):
+    def _opNameTable(self):
         # Opcode 114
         newObject = dict()
         # Read the data to memeory and extract data as normal with modified
@@ -2316,7 +2316,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opCAT(self, fileName = None):
+    def _opCAT(self):
         # Opcode 115
         newObject = dict()
         newObject['DataType'] = "CAT"
@@ -2352,7 +2352,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opCATData(self, fileName = None):
+    def _opCATData(self):
         # Opcode 116
         newObject = dict()
         newObject['DataType'] = 'CATData'
@@ -2398,7 +2398,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opBoundHist(self, fileName = None):
+    def _opBoundHist(self):
         # Opcode 119
         RecordLength = self._readUShort()
         
@@ -2407,17 +2407,17 @@ class OpenFlight:
         self._skip(RecordLength - 4)
     
     
-    def _opPushAttr(self, fileName = None):
+    def _opPushAttr(self):
         # Opcode 122
         pass
     
     
-    def _opPopAttr(self, fileName = None):
+    def _opPopAttr(self):
         # Opcode 123
         pass
     
     
-    def _opCurve(self, fileName = None):
+    def _opCurve(self):
         # Opcode 126
         newObject = dict()
         newObject['DataType'] = 'Curve'
@@ -2444,7 +2444,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opRoadConstruc(self, fileName = None):
+    def _opRoadConstruc(self):
         # Opcode 127
         newObject = dict()
         newObject['DataType'] = 'RoadConstruction'
@@ -2482,7 +2482,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLightPtAppearPalette(self, fileName = None):
+    def _opLightPtAppearPalette(self):
         # Opcode 128
         newObject = dict()
         newObject['DataType'] = 'LightPointAppearancePalette'
@@ -2535,7 +2535,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLightPtAnimatPalette(self, fileName = None):
+    def _opLightPtAnimatPalette(self):
         # Opcode 129
         newObject = dict()
         newObject['DataType'] = 'LightPointAnimationPalette'
@@ -2576,7 +2576,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opIdxLightPt(self, fileName = None):
+    def _opIdxLightPt(self):
         # Opcode 130
         newObject = dict()
         newObject['DataType'] = 'IndexedLightPoint'
@@ -2593,7 +2593,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opLightPtSys(self, fileName = None):
+    def _opLightPtSys(self):
         # Opcode 131
         newObject = dict()
         newObject['DataType'] = 'LightPointSystem'
@@ -2609,7 +2609,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opIdxStr(self, fileName = None):
+    def _opIdxStr(self):
         # Opcode 132
         newObject = dict()
         
@@ -2621,7 +2621,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opShaderPalette(self, fileName = None):
+    def _opShaderPalette(self):
         # Opcode 133
         newObject = dict()
         newObject['DataType'] = 'ShaderPalette'
@@ -2668,7 +2668,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatHdr(self, fileName = None):
+    def _opExtMatHdr(self):
         # Opcode 135
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialHeader'
@@ -2684,7 +2684,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatAmb(self, fileName = None):
+    def _opExtMatAmb(self):
         # Opcode 136
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialAmbient'
@@ -2702,7 +2702,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatDif(self, fileName = None):
+    def _opExtMatDif(self):
         # Opcode 137
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialDiffuse'
@@ -2720,7 +2720,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatSpc(self, fileName = None):
+    def _opExtMatSpc(self):
         # Opcode 138
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialSpecular'
@@ -2740,7 +2740,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatEms(self, fileName = None):
+    def _opExtMatEms(self):
         # Opcode 139
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialEmissive'
@@ -2758,7 +2758,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatAlp(self, fileName = None):
+    def _opExtMatAlp(self):
         # Opcode 140
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialAlpha'
@@ -2778,7 +2778,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatLightMap(self, fileName = None):
+    def _opExtMatLightMap(self):
         # Opcode 141
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialLightMap'
@@ -2792,7 +2792,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatNormMap(self, fileName = None):
+    def _opExtMatNormMap(self):
         # Opcode 142
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialNormalMap'
@@ -2804,7 +2804,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatBumpMap(self, fileName = None):
+    def _opExtMatBumpMap(self):
         # Opcode 143
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialBumpMap'
@@ -2816,7 +2816,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatShadowMap(self, fileName = None):
+    def _opExtMatShadowMap(self):
         # Opcode 145
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialShadowMap'
@@ -2830,7 +2830,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtMatReflMap(self, fileName = None):
+    def _opExtMatReflMap(self):
         # Opcode 147
         newObject = dict()
         newObject['DataType'] = 'ExtendedMaterialReflectionMap'
@@ -2849,7 +2849,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtGUIDPalette(self, fileName = None):
+    def _opExtGUIDPalette(self):
         # Opcode 148
         newObject = dict()
         newObject['DataType'] = 'ExtensionGUIDPalette'
@@ -2863,7 +2863,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtFieldBool(self, fileName = None):
+    def _opExtFieldBool(self):
         # Opcode 149
         newObject = dict()
         newObject['DataType'] = 'ExtensionFieldBoolean'
@@ -2873,7 +2873,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtFieldInt(self, fileName = None):
+    def _opExtFieldInt(self):
         # Opcode 150
         newObject = dict()
         newObject['DataType'] = 'ExtensionFieldInteger'
@@ -2883,7 +2883,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtFieldFloat(self, fileName = None):
+    def _opExtFieldFloat(self):
         # Opcode 151
         newObject = dict()
         newObject['DataType'] = 'ExtensionFieldFloat'
@@ -2893,7 +2893,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtFieldDouble(self, fileName = None):
+    def _opExtFieldDouble(self):
         # Opcode 152
         newObject = dict()
         newObject['DataType'] = 'ExtensionFieldDouble'
@@ -2903,7 +2903,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtFieldString(self, fileName = None):
+    def _opExtFieldString(self):
         # Opcode 153
         newObject = dict()
         
@@ -2921,7 +2921,7 @@ class OpenFlight:
         self._addObject(newObject)
     
     
-    def _opExtFieldXMLString(self, fileName = None):
+    def _opExtFieldXMLString(self):
         # Opcode 154
         newObject = dict()
         
