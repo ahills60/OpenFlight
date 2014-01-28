@@ -743,20 +743,46 @@ class OpenFlight:
     
     def _opPushSubface(self):
         # Opcode 19
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'PushSubface'
+        # Call the push command...
+        self._opPush()
+        # ... and add the push extension object
+        self._addObject(newObject)
+    
     
     def _opPopSubface(self):
         # Opcode 20
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'PopSubface'
+        # Add this object
+        self._addObject(newObject)
+        # before finally issuing a pop command
+        self._opPop()
+    
     
     def _opPushExtension(self):
         # Opcode 21
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'PushExtension'
+        self._skip(18)
+        newObject['VertexRefIdx'] = self._readUShort()
+        # Call the push command...
+        self._opPush()
+        # ... and add the push extension object
+        self._addObject(newObject)
     
     
     def _opPopExtension(self):
         # Opcode 22
-        pass
+        newObject = dict()
+        newObject['DataType'] = 'PopExtension'
+        self._skip(18)
+        newObject['VertexRefIdx'] = self._readUShort()
+        # Add this object
+        self._addObject(newObject)
+        # before finally issuing a pop command
+        self._opPop()
     
     
     def _opContinuation(self):
