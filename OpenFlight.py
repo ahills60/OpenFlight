@@ -2999,14 +2999,20 @@ class OpenFlight:
         self._Chunk = chunk
     
     
-    def _cleanTextureFilename(self, fileName = None):
+    def _cleanExternalFilename(self, fileName = None, isTexture = True):
         if fileName is None:
-            raise IOError('No texture filename specified.')
+            if isTexture:
+                raise IOError('No texture attribute filename specified.')
+            else:
+                raise IOError('No external reference filename specified.')
         
         if fileName[0] == '.':
             # This is based on a relative path. Extract the contents of the stored filename:
             if self.fileName is None:
-                raise IOError('Attribute file uses relative path names. Unable to determine relative path.')
+                if isTexture:
+                    raise IOError('Attribute file uses relative path names. Unable to determine relative path.')
+                else:
+                    raise IOError('External reference filename uses relative path names. Unable to determine relative path.')
             # If here, we can extract the path:
             fileName = os.path.dirname(self.fileName) + os.sep + fileName
         
@@ -3032,7 +3038,10 @@ class OpenFlight:
                 else:
                     print 'Problems with filename: ' + fileName
                     # If here, the issue couldn't be resolved. Throw an error.
-                    raise IOError('Unable to translate texture filename.')
+                    if isTexture:
+                        raise IOError('Unable to translate texture filename.')
+                    else:
+                        raise IOError('Unable to translate external reference filename')
         
         # If here, assume that everything's (now) okay
         return fileName
@@ -3040,7 +3049,7 @@ class OpenFlight:
     
     def _checkTextureFile(self, fileName = None):
         
-        fileName = self._cleanTextureFilename(fileName)
+        fileName = self._cleanExternalFilename(fileName)
         
         if fileName is None:
             raise IOError('No texture filename specified.')
