@@ -516,7 +516,7 @@ class OpenFlight:
                     RecordLength = self._readUShort()
                     if RecordLength != self._OpCodes[iRead][1]:
                         raise Exception("Unexpected " + self._OpCodes[iRead][2] + " record length")
-                self._OpCodes[iRead][0](fileName)
+                self._OpCodes[iRead][0]()
                 
                 # Lastly, save this Opcode:
                 self._PreviousOpCode = iRead
@@ -1006,6 +1006,8 @@ class OpenFlight:
         newObject['LocationInTexturePalette'] = np.zeros((1, 2))
         for colIdx in range(2):
             newObject['LocationInTexturePalette'][0, colIdx] = self._readUInt()
+        
+        newObject['TextureAttributeData'] = self._parseTextureFile(newObject['Filename'])
         
         self._addObject(newObject)
     
@@ -3006,7 +3008,7 @@ class OpenFlight:
             if self.fileName is None:
                 raise IOError('Attribute file uses relative path names. Unable to determine relative path.')
             # If here, we can extract the path:
-            fileName = os.path.dirname(self.fileName) + fileName
+            fileName = os.path.dirname(self.fileName) + os.sep + fileName
         
         # Check to see if this can be accessed firstly.
         if not os.path.exists(fileName):
@@ -3028,6 +3030,7 @@ class OpenFlight:
                 if os.path.exists(fileName.replace('\\', os.sep)):
                     fileName = fileName.replace('\\', os.sep)
                 else:
+                    print 'Problems with filename: ' + fileName
                     # If here, the issue couldn't be resolved. Throw an error.
                     raise IOError('Unable to translate texture filename.')
         
@@ -3050,7 +3053,7 @@ class OpenFlight:
         if not os.path.exists(attrFile):
             raise IOError('Could not find texture attribute file.')
         
-        return fileName
+        return attrFile
     
     
     def _parseTextureFile(self, fileName = None):
@@ -3080,131 +3083,139 @@ class OpenFlight:
             f.seek(noBytes, os.SEEK_CUR)
         
         try:
+            f.seek(0)
             newObject = dict()
             newObject['DataType'] = 'TextureAttribute'
-        
+            
             varNames = ['NumberOfTexelsU', 'NumberOfTexelsV', None, None, 'xUp', 'yUp', 'FileFormatType', 'MinificationFilterType', 'MagnificationFilterType', 'WrapMethod', 'WrapMethodUV', 'WrapMethodU', 'WrapMethodV', 'ModifiedFlag', 'xPivot', 'yPivot', 'EnvironmentType', 'IntensityPattern']
             for varName in varNames:
                 if varName is None:
                     skip(4)
                 else:
                     newObject[varName] = readInt()
-        
+            
             # Now process these readings:
             if newObject['FileFormatType'] not in range(6):
                 raise Exception('Unable to determine file format type.')
-        
+            
             typeNames = ['AT&T image 8 pattern', 'AT&T image 8 template', 'SGI intensity modulation', 'SGI intensity with alpha', 'SGI RGB', 'SGI RGB with alpha']
             newObject['FileFormatName'] = typeNames[newObject['FileFormatType']]
-        
+            
             if newObject['MinificationFilterType'] not in range(13):
                 raise Exception('Unable to determine minification filter type.')
-        
+            
             if newObject['MagnificationFilterType'] not in range(11):
                 raise Exception('Unable to determine magnification filter type.')
-        
+            
             if newObject['WrapMethodUV'] not in [0, 1, 4]:
                 raise Exception('Unable to determine wrap method u,v.')
             if newObject['WrapMethodU'] not in [0, 1, 3, 4]:
                 raise Exception('Unable to determine wrap method u.')
             if newObject['WrapMethodV'] not in [0, 1, 3, 4]:
                 raise Exception('Unable to determine wrap method v.')
-        
+            
             if newObject['EnvironmentType'] not in range(5):
                 raise Exception('Unable to determine environment type.')
-        
+            
             # Finished processing. Now skip over a reserved area:
-            skip(36)
-        
+            # This skip is based on version OpenFlight versions prior to 16.1. After this,
+            # an additional 4 bytes was added to instructions.
+            skip(32)
+            # skip(36)
+            
             newObject['RealWorldSizeDirectionU'] = readDouble()
             newObject['RealWorldSizeDirectionV'] = readDouble()
-        
-            varNames = ['CodeForOriginOfImportedTexture', 'Kernel version number', 'InternalFormatType', 'ExternalFormatType', 'MIPMAP']
-        
+            
+            varNames = ['CodeForOriginOfImportedTexture', 'KernelVersionNumber', 'InternalFormatType', 'ExternalFormatType', 'MIPMAP']
+            
             for varName in varNames:
                 newObject[varName] = readInt()
-        
+            
             # Now process these readings:
             if newObject['InternalFormatType'] not in range(10):
                 raise Exception('Unable to determine internal format type.')
             if newObject['ExternalFormatType'] not in range(3):
                 raise Exception('Unable to determine external format type.')
-        
+            
             newObject['SeparableSymmetricFilterKernel'] = np.zeros((1, 8))
             for colIdx in range(8):
                 newObject['SeparableSymmetricFilterKernel'][0, colIdx] = readFloat()
-        
+            
             newObject['SendTXControlPoints'] = readInt()
-        
+            
             for idx in range(8):
                 newObject['LOD' + str(idx)] = readFloat()
                 newObject['Scale' + str(idx)] = readFloat()
-        
+            
             newObject['ControlClamp'] = readFloat()
-        
+            
             newObject['AlphaMagnificationFilterType'] = readInt()
             if newObject['AlphaMagnificationFilterType'] not in range(11):
                 raise Exception('Unable to determine magnification filter type for alpha.')
             newObject['ColourMagnificationFilterType'] = readInt()
             if newObject['ColourMagnificationFilterType'] not in range(11):
                 raise Exception('Unable to determine magnification filter type for colour.')
-        
+            
             # Skip over reserved area:
             skip(36)
-        
+            
             varNames = ['CentralMeridian', 'UpperLatitude', 'LowerLatitude']
-        
+            
             for varName in varNames:
                 newObject['LambertConicProjection' + varName] = readDouble()
-        
+            
             # Skip over reserved region:
             skip(28)
-        
+            
             varNames = ['Using', 'J', 'K', 'M', 'N', 'Scramble']
             for varName in varNames:
                 newObject[varName + 'TXDetail'] = readInt()
-        
+            
             newObject['UsingTXTile'] = readInt()
-        
+            
             varNames = ['LowerLeftU', 'LowerLeftV', 'UpperRightU', 'UpperRightV']
             for varName in varNames:
-                newObject[varNames + 'TXTile'] = readFloat()
-        
+                newObject[varName + 'TXTile'] = readFloat()
+            
             varNames = ['Projection', 'EarthModel', None, 'UTMZone', 'ImageOrigin', 'GeospecificPointsUnits']
             for varName in varNames:
                 if varName is None:
                     skip(4)
                 else:
                     newObject[varName] = readInt()
-        
+            
             # Now validate the input:
             if newObject['Projection'] not in [0, 3, 4, 7]:
                 raise Exception('Unable to determine projection.')
-        
+            
             if newObject['EarthModel'] not in range(5):
                 raise Exception('Unable to determine earth model.')
-        
+            
             if newObject['ImageOrigin'] not in [0, 1]:
                 raise Exception('Unable to determine image origin.')
-        
+            
             if newObject['GeospecificPointsUnits'] not in range(3):
                 raise Exception('Unable to determine geospecific points units.')
-        
+            
             skip(8)
             newObject['HemisphereForGeospecificPointsUnits'] = readInt()
             if newObject['HemisphereForGeospecificPointsUnits'] not in [0, 1]:
                 raise Exception('Unable to determine hemisphere for geospecific points units.')
-        
+            
             skip(12)
             newObject['TextureForCubemap'] = readInt()
-        
+            
             skip(588)
             newObject['Comments'] = readString(512)
-        
-            skip(56)
+            
+            # This skip is based on version OpenFlight versions prior to 16.1. After this,
+            # an additional 4 bytes was added to instructions.
+            skip(52)
+            # skip(56)
+            
             newObject['AttributeFileVersionNumber'] = readInt()
             newObject['NumberOfGeospecificControlPoints'] = readInt()
-        
+            
             # Now process geospecific control point subrecord if there are some included.
             if newObject['NumberOfGeospecificControlPoints'] > 0:
                 # There are records to process.
@@ -3212,17 +3223,23 @@ class OpenFlight:
                 varNames = ['TexelU', 'TexelV', 'EarthCoordinateX', 'EarthCoordinateY']
                 for idx in range(newObject['NumberOfGeospecificControlPoints']):
                     for varName in varNames:
-                        newObject[varNames + str(idx)] = readDouble()
-            
+                        newObject[varName + str(idx)] = readDouble()
+                
                 varNames = ['Left', 'Bottom', 'Right', 'Top']
                 newObject['NumberOfSubtextures'] = readInt()
                 # Now iterate through the number of subtextures if there are any.
                 for idx in range('NumberOfSubtextures'):
                     newObject['Name' + str(idx)] = readString(32)
                     for varName in varNames:
-                        newObject[varNames + str(idx)] = readInt()
+                        newObject[varName + str(idx)] = readInt()
+        except struct.error, e:
+            print "\nWarning: Error parsing texture attribute file. Likely ended unexpectedly."
+            print '\t Error message: ' + str(e) + '\n'
+            f.close()
         except BaseException, e:
             f.close()
+            # Now raise the exception outside the attribute parser so that it's picked up by the
+            # exterior try-except.
             raise e
         finally:
             f.close()
