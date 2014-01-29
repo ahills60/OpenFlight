@@ -9,7 +9,7 @@ class OpenFlight:
        Version: 0.0.1
     """
     
-    def __init__(self, fileName = None):
+    def __init__(self, fileName = None, verbose = False):
         self._Checks = [self._check_filesize, self._check_header]
         self._ErrorMessages = ['This file does not conform to OpenFlight standards. The file size is not a multiple of 4.',
                                'This file does not conform to OpenFlight standards. The header is incorrect.']
@@ -156,6 +156,7 @@ class OpenFlight:
         self._TreeStack = []
         self._InstanceStack = []
         self._Chunk = None
+        self._verbose = verbose
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -472,11 +473,13 @@ class OpenFlight:
             return True
     
     def ReadFile(self, fileName = None):
-        # Number of checks to perform        
+        # Number of checks to perform
         if fileName is None:
             if self.fileName is None:
                 raise IOError('No filename specified.')
             fileName = self.fileName
+        
+        print('\nFile to open: ' + self.fileName + '\n')
         
         if not os.path.exists(fileName):
             raise IOError('Could not find file.')
@@ -504,7 +507,8 @@ class OpenFlight:
                     break
                 # There's some data.
                 iRead = struct.unpack('>h', iRead)[0]
-                print "Opcode read:", str(iRead)
+                if self._verbose:
+                    print "Opcode read:", str(iRead)
                 if iRead in self._ObsoleteOpCodes:
                     raise Exception("Unable to continue. File uses obsolete codes.")
                 if iRead not in self._OpCodes:
@@ -993,6 +997,15 @@ class OpenFlight:
         newObject["Flags"] = self._readUInt()
         newObject["BoundingBox"] = self._readUShort()
         self._skip(2)
+        
+        # Clean the pathname and make it usable for this system
+        fileName = self._cleanExternalFilename(newObject['ASCIIPath'])
+        
+        # Create a new instance of this class and read the file.
+        extdb = OpenFlight(fileName, verbose = self._verbose)
+        extdb.ReadFile()
+        # Add the records as a child node.
+        newObject["ExternalDB"] = extdb.Records
         
         # Inject into tree
         self._addObject(newObject)
