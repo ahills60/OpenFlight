@@ -9,7 +9,7 @@ class OpenFlight:
        Version: 0.0.1
     """
     
-    def __init__(self, fileName = None, verbose = False):
+    def __init__(self, fileName = None, verbose = False, parent = None):
         self._Checks = [self._check_filesize, self._check_header]
         self._ErrorMessages = ['This file does not conform to OpenFlight standards. The file size is not a multiple of 4.',
                                'This file does not conform to OpenFlight standards. The header is incorrect.']
@@ -152,11 +152,13 @@ class OpenFlight:
         self.Records = dict()
         self.Records["Tree"] = []
         self.Records["Instances"] = dict()
+        self.Records["External"] = dict()
         self._RecordType = 'Tree'
         self._TreeStack = []
         self._InstanceStack = []
         self._Chunk = None
         self._verbose = verbose
+        self._parent = parent
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -1001,11 +1003,25 @@ class OpenFlight:
         # Clean the pathname and make it usable for this system
         fileName = self._cleanExternalFilename(newObject['ASCIIPath'])
         
-        # Create a new instance of this class and read the file.
-        extdb = OpenFlight(fileName, verbose = self._verbose)
-        extdb.ReadFile()
-        # Add the records as a child node.
-        newObject["ExternalDB"] = extdb.Records
+        # Check to see if this is the parent class:
+        if self._parent is None:
+            # Yes, this is the parent class
+            if fileName not in self.Records['External']:
+                # This has not been referenced before. 
+                # Create a new instance of this class and read the file.
+                extdb = OpenFlight(fileName, verbose = self._verbose, parent = self)
+                extdb.ReadFile()
+                self.Records['External'][fileName] = extdb.Records
+                extdb = None
+        else:
+            # This is a child class. Add this object to the parent class
+            if fileName not in self._parent.Records['External']:
+                # This has not been referenced before:
+                # Create a new instance of this class and read the file.
+                extdb = OpenFlight(fileName, verbose = self._verbose, parent = self._parent)
+                extdb.ReadFile()
+                self._parent.Records['External'][filename] = extdb.Records
+                extdb = None
         
         # Inject into tree
         self._addObject(newObject)
@@ -1020,7 +1036,17 @@ class OpenFlight:
         for colIdx in range(2):
             newObject['LocationInTexturePalette'][0, colIdx] = self._readUInt()
         
-        newObject['TextureAttributeData'] = self._parseTextureFile(newObject['Filename'])
+        # Check to see if this is the parent class
+        if self._parent is None:
+            # This is the parent class. Use the local records
+            if newObject['Filename'] not in self.Records['External']:
+                # This has not been referenced before.
+                self.Records['External'][newObject['Filename']] = self._parseTextureFile(newObject['Filename'])
+        else:
+            # This is a child class. Add this object to the parent class
+            if newObject['Filename'] not in self._parent.Records['External']:
+                # This has not been referenced before:
+                self._parent.Records['External'][newObject['Filename']] = self._parseTextureFile(newObject['Filename'])
         
         self._addObject(newObject)
     
