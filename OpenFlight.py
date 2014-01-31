@@ -153,6 +153,7 @@ class OpenFlight:
         self.Records["Tree"] = []
         self.Records["Instances"] = dict()
         self.Records["External"] = dict()
+        self.Records["Vertices"] = dict()
         self._RecordType = 'Tree'
         self._TreeStack = []
         self._InstanceStack = []
@@ -160,6 +161,7 @@ class OpenFlight:
         self._verbose = verbose
         self._parent = parent
         self._tabbing = tabbing
+        self._VertexCounter = 0
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -1060,6 +1062,7 @@ class OpenFlight:
         newObject['Length'] = self._readUInt()
         
         self._addObject(newObject)
+        self._VertexCounter += 8
     
     
     def _opVertexColour(self):
@@ -1077,6 +1080,8 @@ class OpenFlight:
         newObject['VertexColourIndex'] = self._readUInt()
         
         self._addObject(newObject)
+        self.Records['Vertices'][self._VertexCounter] = newObject
+        self._VertexCounter += 40
     
     
     def _opVertexColNorm(self):
@@ -1100,6 +1105,8 @@ class OpenFlight:
         self._skip(4)
         
         self._addObject(newObject)
+        self.Records['Vertices'][self._VertexCounter] = newObject
+        self._VertexCounter += 56
     
     
     def _opVertexColNormUV(self):
@@ -1127,6 +1134,8 @@ class OpenFlight:
         self._skip(4)
         
         self._addObject(newObject)
+        self.Records['Vertices'][self._VertexCounter] = newObject
+        self._VertexCounter += 48
     
     
     def _opVertexColUV(self):
@@ -1148,6 +1157,8 @@ class OpenFlight:
         newObject['VertexColourIndex'] = self._readUInt()
         
         self._addObject(newObject)
+        self.Records['Vertices'][self._VertexCounter] = newObject
+        self._VertexCounter += 64
     
     
     def _opVertexList(self):
