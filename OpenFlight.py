@@ -154,6 +154,7 @@ class OpenFlight:
         self.Records["Instances"] = dict()
         self.Records["External"] = dict()
         self.Records["Vertices"] = dict()
+        self.Records["VertexList"] = []
         self._RecordType = 'Tree'
         self._TreeStack = []
         self._InstanceStack = []
@@ -1180,6 +1181,9 @@ class OpenFlight:
         self._Chunk = None
         
         self._addObject(newObject)
+        
+        # And keep a copy in the vertex list
+        self.Records["VertexList"].append(newObject['ByteOffset'])
     
     
     def _opLoD(self):
