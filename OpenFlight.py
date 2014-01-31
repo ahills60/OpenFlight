@@ -1136,7 +1136,7 @@ class OpenFlight:
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
-        self._VertexCounter += 48
+        self._VertexCounter += 64
     
     
     def _opVertexColUV(self):
@@ -1159,7 +1159,7 @@ class OpenFlight:
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
-        self._VertexCounter += 64
+        self._VertexCounter += 48
     
     
     def _opVertexList(self):
