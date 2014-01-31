@@ -9,7 +9,7 @@ class OpenFlight:
        Version: 0.0.1
     """
     
-    def __init__(self, fileName = None, verbose = False, parent = None):
+    def __init__(self, fileName = None, verbose = False, parent = None, tabbing = 0):
         self._Checks = [self._check_filesize, self._check_header]
         self._ErrorMessages = ['This file does not conform to OpenFlight standards. The file size is not a multiple of 4.',
                                'This file does not conform to OpenFlight standards. The header is incorrect.']
@@ -159,6 +159,7 @@ class OpenFlight:
         self._Chunk = None
         self._verbose = verbose
         self._parent = parent
+        self._tabbing = tabbing
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -269,7 +270,7 @@ class OpenFlight:
         # Ensure we're at the start of the file
         self.f.seek(0)
         
-        print "Determining record type... ",
+        print '\t' * self._tabbing + "Determining record type... ",
         iRead = self._readShort()
         
         recognised = [iRead == this for this in recognisableRecordTypes]
@@ -277,50 +278,50 @@ class OpenFlight:
         if not any(recognised):
             raise Exception("Unidentifiable record type")
         
-        print "\rDetermining record length... ",
+        print "\r" + '\t' * self._tabbing + "Determining record length... ",
         recordLength = self._readUShort()
         
         if recordLength != recognisableRecordSizes[recognised.index(True)]:
             raise Exception("Unexpected record length.")
         
-        print "\rReading record name... ",
+        print "\r" + '\t' * self._tabbing + "Reading record name... ",
         
         self.DBName  = self._readString(8)
         
-        print "\rRead database name \"" + self.DBName + "\"\n"
+        print "\r" + '\t' * self._tabbing + "Read database name \"" + self.DBName + "\"\n"
         
-        print "Determining file format revision number... ",
+        print '\t' * self._tabbing + "Determining file format revision number... ",
         iRead = self._readInt()
         
         if iRead not in self._OpenFlightFormats:
             raise Exception("Unrecognised OpenFlight file format revision number.")
-        print "\rDatabase is written in the " + self._OpenFlightFormats[iRead] + " file format.\n"
+        print "\r" '\t' * self._tabbing + "Database is written in the " + self._OpenFlightFormats[iRead] + " file format.\n"
         
         # We're not interested in the edit revision number, so skip that:
         self._skip(4)
         
-        print "Determining date and time of last revision... ",
+        print '\t' * self._tabbing + "Determining date and time of last revision... ",
         
         # Next up is the date and time of the last revision
         iRead = self._readString(32)
         
-        print "\rRecorded date and time of last revision: " + iRead + "\n"
+        print "\r" + '\t' * self._tabbing + "Recorded date and time of last revision: " + iRead + "\n"
         
-        print "Extracting Node ID numbers... ",
+        print '\t' * self._tabbing + "Extracting Node ID numbers... ",
         
         self.PrimaryNodeID['Group'] = self._readUShort()
         self.PrimaryNodeID['LOD'] = self._readUShort()
         self.PrimaryNodeID['Object'] = self._readUShort()
         self.PrimaryNodeID['Face'] = self._readUShort()
         
-        print "\rValidating unit multiplier... ",
+        print "\r" + '\t' * self._tabbing + "Validating unit multiplier... ",
         
         iRead = self._readUShort()
         
         if iRead != 1:
             raise Exception("Unexpected value for unit multiplier.")
         
-        print "\rExtracting scene settings... ",
+        print "\r" + '\t' * self._tabbing + "Extracting scene settings... ",
         
         iRead = self._readUChar()
         
@@ -456,22 +457,22 @@ class OpenFlight:
                 checkList[funcIdx] = func(fileName)
             self._LastPlace = self.f.tell()
         except BaseException, e:
-            print("An error occurred when calling " + str(func) + ".")
-            print(str(e))
+            print('\t' * self._tabbing + "An error occurred when calling " + str(func) + ".")
+            print('\t' * self._tabbing + str(e))
         finally:
             if self.f is not None:
                 self.f.close()
                 self.f = None
         
         if not all(checkList):
-            print "\nThe following errors were encountered:\n"
+            print "\n" + '\t' * self._tabbing + "The following errors were encountered:\n"
             messages = [message for msgIdx, message in enumerate(self._ErrorMessages) if not checkList[msgIdx]]
             for message in messages:
-                print message
+                print '\t' * self._tabbing + message
             print "\n"
             return False
         else:
-            print "\nThis file conforms to OpenFlight standards\n"
+            print "\n" + '\t' * self._tabbing + "This file conforms to OpenFlight standards\n"
             return True
     
     def ReadFile(self, fileName = None):
@@ -481,7 +482,7 @@ class OpenFlight:
                 raise IOError('No filename specified.')
             fileName = self.fileName
         
-        print('\nFile to open: ' + fileName + '\n')
+        print('\n' + '\t' * self._tabbing +  'File to open: ' + fileName + '\n')
         
         if not os.path.exists(fileName):
             raise IOError('Could not find file.')
@@ -500,7 +501,7 @@ class OpenFlight:
         self._TreeStack = []
         self._InstanceStack = []
         
-        print "Reading OpenFlight file..."
+        print '\t' * self._tabbing + "Reading OpenFlight file..."
         
         try:
             while True:
@@ -510,7 +511,7 @@ class OpenFlight:
                 # There's some data.
                 iRead = struct.unpack('>h', iRead)[0]
                 if self._verbose:
-                    print "Opcode read:", str(iRead)
+                    print '\t' * self._tabbing + "Opcode read:", str(iRead)
                 if iRead in self._ObsoleteOpCodes:
                     raise Exception("Unable to continue. File uses obsolete codes.")
                 if iRead not in self._OpCodes:
@@ -526,12 +527,12 @@ class OpenFlight:
                 
                 # Lastly, save this Opcode:
                 self._PreviousOpCode = iRead
-            print "Finished reading", fileName + "\n"
+            print '\t' * self._tabbing + "Finished reading", fileName + "\n"
         except BaseException, e:
             if iRead not in self._OpCodes:
-                print("An error occurred when calling Opcode " + str(iRead) + ".")
+                print('\t' * self._tabbing + "An error occurred when calling Opcode " + str(iRead) + ".")
             else:
-                print("An error occurred when calling Opcode " + str(iRead) + " (" + self._OpCodes[iRead][2]  + ").")
+                print('\t' * self._tabbing + "An error occurred when calling Opcode " + str(iRead) + " (" + self._OpCodes[iRead][2]  + ").")
             print(str(e))
             self.e = e
         finally:
@@ -1010,7 +1011,7 @@ class OpenFlight:
             if fileName not in self.Records['External']:
                 # This has not been referenced before. 
                 # Create a new instance of this class and read the file.
-                extdb = OpenFlight(fileName, verbose = self._verbose, parent = self)
+                extdb = OpenFlight(fileName, verbose = self._verbose, parent = self, tabbing = self._tabbing + 1)
                 extdb.ReadFile()
                 self.Records['External'][fileName] = extdb.Records
                 extdb = None
@@ -1019,7 +1020,7 @@ class OpenFlight:
             if fileName not in self._parent.Records['External']:
                 # This has not been referenced before:
                 # Create a new instance of this class and read the file.
-                extdb = OpenFlight(fileName, verbose = self._verbose, parent = self._parent)
+                extdb = OpenFlight(fileName, verbose = self._verbose, parent = self._parent, tabbing = self._tabbing + 1)
                 extdb.ReadFile()
                 self._parent.Records['External'][filename] = extdb.Records
                 extdb = None
@@ -3076,7 +3077,7 @@ class OpenFlight:
                 if os.path.exists(fileName.replace('\\', os.sep)):
                     fileName = fileName.replace('\\', os.sep)
                 else:
-                    print 'Problems with filename: ' + fileName
+                    print '\t' * self._tabbing + 'Problems with filename: ' + fileName
                     # If here, the issue couldn't be resolved. Throw an error.
                     if isTexture:
                         raise IOError('Unable to translate texture filename.')
@@ -3282,8 +3283,8 @@ class OpenFlight:
                     for varName in varNames:
                         newObject[varName + str(idx)] = readInt()
         except struct.error, e:
-            print "\nWarning: Error parsing texture attribute file. Likely ended unexpectedly."
-            print '\t Error message: ' + str(e) + '\n'
+            print "\n" '\t' * self._tabbing + "Warning: Error parsing texture attribute file. Likely ended unexpectedly."
+            print '\t' * self._tabbing + '\t Error message: ' + str(e) + '\n'
             f.close()
         except BaseException, e:
             f.close()
