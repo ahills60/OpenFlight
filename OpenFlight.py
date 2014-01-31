@@ -481,7 +481,7 @@ class OpenFlight:
                 raise IOError('No filename specified.')
             fileName = self.fileName
         
-        print('\nFile to open: ' + self.fileName + '\n')
+        print('\nFile to open: ' + fileName + '\n')
         
         if not os.path.exists(fileName):
             raise IOError('Could not find file.')
@@ -526,6 +526,7 @@ class OpenFlight:
                 
                 # Lastly, save this Opcode:
                 self._PreviousOpCode = iRead
+            print "Finished reading", fileName + "\n"
         except BaseException, e:
             if iRead not in self._OpCodes:
                 print("An error occurred when calling Opcode " + str(iRead) + ".")
