@@ -577,7 +577,7 @@ class OpenFlight:
         # Opcode 2
         newObject = dict()
         
-        newObject['DataType'] = "Group"
+        newObject['Datatype'] = "Group"
         newObject['ASCIIID'] = self._readString(8)
         newObject['RelativePriority'] = self._readShort()
         
@@ -601,7 +601,7 @@ class OpenFlight:
     def _opObject(self):
         # Opcode 4
         newObject = dict()
-        newObject['DataType'] = "Object"
+        newObject['Datatype'] = "Object"
         newObject['ASCIIID'] = self._readString(8)
         newObject['Flags'] = self._readUInt()
         newObject['RelativePriority'] = self._readShort()
@@ -616,7 +616,7 @@ class OpenFlight:
     def _opFace(self):
         # Opcode 5
         newObject = dict()
-        newObject['DataType'] = "Face"
+        newObject['Datatype'] = "Face"
         newObject['ASCIIID'] = self._readString(8)
         newObject['IRColCode'] = self._readUInt()
         newObject['RelativePriority'] = self._readShort()
@@ -726,7 +726,7 @@ class OpenFlight:
     def _opDoF(self):
         # Opcode 14
         newObject = dict()
-        newObject['DataType'] = 'DegreeOfFreedom'
+        newObject['Datatype'] = 'DegreeOfFreedom'
         newObject['ASCIIID'] = self._readString(8)
         
         # Skip over a reserved area
@@ -755,7 +755,7 @@ class OpenFlight:
     def _opPushSubface(self):
         # Opcode 19
         newObject = dict()
-        newObject['DataType'] = 'PushSubface'
+        newObject['Datatype'] = 'PushSubface'
         # Call the push command...
         self._opPush()
         # ... and add the push extension object
@@ -765,7 +765,7 @@ class OpenFlight:
     def _opPopSubface(self):
         # Opcode 20
         newObject = dict()
-        newObject['DataType'] = 'PopSubface'
+        newObject['Datatype'] = 'PopSubface'
         # Add this object
         self._addObject(newObject)
         # before finally issuing a pop command
@@ -775,7 +775,7 @@ class OpenFlight:
     def _opPushExtension(self):
         # Opcode 21
         newObject = dict()
-        newObject['DataType'] = 'PushExtension'
+        newObject['Datatype'] = 'PushExtension'
         self._skip(18)
         newObject['VertexRefIdx'] = self._readUShort()
         # Call the push command...
@@ -787,7 +787,7 @@ class OpenFlight:
     def _opPopExtension(self):
         # Opcode 22
         newObject = dict()
-        newObject['DataType'] = 'PopExtension'
+        newObject['Datatype'] = 'PopExtension'
         self._skip(18)
         newObject['VertexRefIdx'] = self._readUShort()
         # Add this object
@@ -808,7 +808,7 @@ class OpenFlight:
         # Read the data to memory and extract data as normal with modified
         # read functions
         self._readChunk()
-        newObject['DataType'] = 'Comment'
+        newObject['Datatype'] = 'Comment'
         
         # Read the string to the end of the chunk
         newObject['Text'] = self._readString(len(self._Chunk), fromChunk = True)
@@ -826,7 +826,7 @@ class OpenFlight:
         RecordLength = self._readUShort()
         
         newObject = dict()
-        newObject['DataType'] = 'ColourPalette'
+        newObject['Datatype'] = 'ColourPalette'
         
         # Skip a reserved area
         self._skip(128)
@@ -856,7 +856,7 @@ class OpenFlight:
     def _opLongID(self):
         # Opcode 33
         newObject = dict()
-        newObject['DataType'] = 'LongID'
+        newObject['Datatype'] = 'LongID'
         
         RecordLength = self._readUShort()
         
@@ -877,7 +877,7 @@ class OpenFlight:
     def _opVector(self):
         # Opcode 50
         newObject = dict()
-        newObject['DataType'] = 'Vector'
+        newObject['Datatype'] = 'Vector'
         
         Components = ['i', 'j', 'k']
         for component in Components:
@@ -891,7 +891,7 @@ class OpenFlight:
         RecordLength = self._readUShort()
         
         newObject = dict()
-        newObject['DataType'] = 'Multitexture'
+        newObject['Datatype'] = 'Multitexture'
         
         newObject['Mask'] = self._readUInt()
         
@@ -908,7 +908,7 @@ class OpenFlight:
     def _opUVList(self):
         # Opcode 53
         newObject = dict()
-        newObject['DataType'] = 'UVList'
+        newObject['Datatype'] = 'UVList'
         
         RecordLength = self._readUShort()
         
@@ -942,7 +942,7 @@ class OpenFlight:
     def _opBSP(self):
         # Opcode 55
         newObject = dict()
-        newObject['DataType'] = 'BinarySeparatingPlane'
+        newObject['Datatype'] = 'BinarySeparatingPlane'
         newObject['ASCIIID'] = self._readString(8)
         
         self._skip(4)
@@ -957,7 +957,7 @@ class OpenFlight:
     def _opReplicate(self):
         # Opcode 60
         newObject = dict()
-        newObject['DataType'] = 'Replicate'
+        newObject['Datatype'] = 'Replicate'
         
         newObject['NoReplications'] = self._readUShort()
         
@@ -1189,7 +1189,7 @@ class OpenFlight:
     def _opLoD(self):
         # Opcode 73
         newObject = dict()
-        newObject['DataType'] = 'LevelOfDetail'
+        newObject['Datatype'] = 'LevelOfDetail'
         newObject['ASCIIID'] = self._readString(8)
         
         # Skip over the reserved area
@@ -1217,7 +1217,7 @@ class OpenFlight:
         # Opcode 74
         
         newObject = dict()
-        newObject['DataType'] = 'BoundingBox'
+        newObject['Datatype'] = 'BoundingBox'
         
         # Skip over the reserved area
         self._skip(4)
@@ -1236,7 +1236,7 @@ class OpenFlight:
     def _opRotEdge(self):
         # Opcode 76
         newObject = dict()
-        newObject['DataType'] = 'RotateAboutEdge'
+        newObject['Datatype'] = 'RotateAboutEdge'
         
         self._skip(4)
         
@@ -1257,7 +1257,7 @@ class OpenFlight:
     def _opTranslate(self):
         # Opcode 78
         newObject = dict()
-        newObject['DataType'] = 'Translate'
+        newObject['Datatype'] = 'Translate'
         
         self._skip(4)
         
@@ -1274,7 +1274,7 @@ class OpenFlight:
     def _opScale(self):
         # Opcode 79
         newObject = dict()
-        newObject['DataType'] = 'Scale'
+        newObject['Datatype'] = 'Scale'
         
         self._skip(4)
         
@@ -1294,7 +1294,7 @@ class OpenFlight:
     def _opRotPoint(self):
         # Opcode 80
         newObject = dict()
-        newObject['DataType'] = 'RotateAboutPoint'
+        newObject['Datatype'] = 'RotateAboutPoint'
         
         self._skip(4)
         
@@ -1312,7 +1312,7 @@ class OpenFlight:
     def _opRotScPoint(self):
         # Opcode 81
         newObject = dict()
-        newObject['DataType'] = 'RotateScaleToPoint'
+        newObject['Datatype'] = 'RotateScaleToPoint'
         
         self._skip(4)
         
@@ -1334,7 +1334,7 @@ class OpenFlight:
     def _opPut(self):
         # Opcode 82
         newObject = dict()
-        newObject['DataType'] = 'Put'
+        newObject['Datatype'] = 'Put'
         
         self._skip(4)
         
@@ -1350,7 +1350,7 @@ class OpenFlight:
     def _opEyeTrackPalette(self):
         # Opcode 83
         newObject = dict()
-        newObject['DataType'] = 'EyepointAndTrackplanePalette'
+        newObject['Datatype'] = 'EyepointAndTrackplanePalette'
         
         self._skip(4)
         
@@ -1451,7 +1451,7 @@ class OpenFlight:
     def _opMesh(self):
         # Opcode 84
         newObject = dict()
-        newObject['DataType'] = 'Mesh'
+        newObject['Datatype'] = 'Mesh'
         
         # This is identical to the face record.
         
@@ -1538,6 +1538,7 @@ class OpenFlight:
         # read functions
         self._readChunk()
         
+        newObject['Datatype'] = 'LocalVertexPool'
         newObject['NumberOfVertices'] = self._readUInt(fromChunk = True)
         newObject['AttributeMask'] = self._readUInt(fromChunk = True)
         
@@ -1596,7 +1597,7 @@ class OpenFlight:
     def _opMeshPrim(self):
         # Opcode 86
         newObject = dict()
-        newObject['DataType'] = 'MeshPrimitive'
+        newObject['Datatype'] = 'MeshPrimitive'
         
         # Read the data to memory and extract data as normal with modified
         # read functions
@@ -1628,7 +1629,7 @@ class OpenFlight:
     def _opRoadSeg(self):
         # Opcode 87
         newObject = dict()
-        newObject['DataType'] = "RoadSegment"
+        newObject['Datatype'] = "RoadSegment"
         newObject['ASCIIID'] = self._readString(8)
         
         self._addObject(newObject)
@@ -1637,7 +1638,7 @@ class OpenFlight:
     def _opRoadZone(self):
         # Opcode 88
         newObject = dict()
-        newObject['DataType'] = 'RoadZone'
+        newObject['Datatype'] = 'RoadZone'
         newObject['ZoneFilename'] = self._readString(120)
         
         self._skip(4)
@@ -1658,7 +1659,7 @@ class OpenFlight:
     def _opMorphVertex(self):
         # Opcode 89
         newObject = dict()
-        newObject['DataType'] = 'MorphVertexList'
+        newObject['Datatype'] = 'MorphVertexList'
         
         # Read the data to memory and extract data as normal with modified
         # read fucntions
@@ -1680,7 +1681,7 @@ class OpenFlight:
     def _opLinkPalette(self):
         # Opcode 90
         newObject = dict()
-        newObject['DataType'] = 'LinkagePalette'
+        newObject['Datatype'] = 'LinkagePalette'
         
         RecordLength = self._readUShort()
         
@@ -1699,13 +1700,13 @@ class OpenFlight:
             
             newObject['Records'] = []
             
-            varNames = ['KeyValue', 'DataType', 'DataOffset']
+            varNames = ['KeyValue', 'KeyDatatype', 'DataOffset']
             
             for idx in range(newObject['ActualNumber']):
                 tempDict = dict()
                 for varName in varNames:
                     tempDict[varName] = self._readInt()
-                if varName['DataType'] not in [0x12120001, 0x12120002, 0x12120004]:
+                if varName['KeyDatatype'] not in [0x12120001, 0x12120002, 0x12120004]:
                     raise Exception('Unable to determine data type for record ' + str(idx))
                 # Append this record to the record list:
                 newObject.append(varName)
@@ -1721,7 +1722,7 @@ class OpenFlight:
     def _opSound(self):
         # Opcode 91
         newObject = dict()
-        newObject['DataType'] = 'Sound'
+        newObject['Datatype'] = 'Sound'
         newObject['ASCIIID'] = self._readString(8)
         
         self._skip(4)
@@ -1753,7 +1754,7 @@ class OpenFlight:
     def _opRoadPath(self):
         # Opcode 92
         newObject = dict()
-        newObject['DataType'] = 'RoadPath'
+        newObject['Datatype'] = 'RoadPath'
         newObject['ASCIIID'] = self._readString(8)
         
         self._skip(4)
@@ -1777,7 +1778,7 @@ class OpenFlight:
     def _opSoundPalette(self):
         # Opcode 93
         newObject = dict()
-        newObject['DataType'] = 'SoundPaletteData'
+        newObject['Datatype'] = 'SoundPaletteData'
         
         RecordLength = self._readUShort()
         
@@ -1821,7 +1822,7 @@ class OpenFlight:
     def _opText(self):
         # Opcode 95
         newObject = dict()
-        newObject['DataType'] = 'Text'
+        newObject['Datatype'] = 'Text'
         newObject['ASCIIID'] = self._readString(8)
         
         self._skip(8)
@@ -1873,7 +1874,7 @@ class OpenFlight:
     def _opSwitch(self):
         # Opcode 96
         newObject = dict()
-        newObject['DataType'] = 'Switch'
+        newObject['Datatype'] = 'Switch'
         
         RecordLength = self._readUShort()
         
@@ -1895,7 +1896,7 @@ class OpenFlight:
     def _opLineStylePalette(self):
         # Opcode 97
         newObject = dict()
-        newObject['DataType'] = 'LineStylePalette'
+        newObject['Datatype'] = 'LineStylePalette'
         newObject['LineStyleIdx'] = self._readUShort()
         newObject['PatternMask'] = self._readUShort()
         newObject['LineWidth'] = self._readUInt()
@@ -1906,7 +1907,7 @@ class OpenFlight:
     def _opClipRegion(self):
         # Opcode 98
         newObject = dict()
-        newObject['DataType'] = 'ClipRegion'
+        newObject['Datatype'] = 'ClipRegion'
         newObject['ASCIIID'] = self._readString(8)
         
         self._skip(6)
@@ -1938,7 +1939,7 @@ class OpenFlight:
         # Read the data to memory and extract data as normal with modified
         # read functions
         self._readChunk()
-        newObject['DataType'] = 'Extension'
+        newObject['Datatype'] = 'Extension'
         
         varNames = ['ASCIIID', 'SiteID']
         for varName in varNames:
@@ -1960,7 +1961,7 @@ class OpenFlight:
     def _opLightSrc(self):
         # Opcode 101
         newObject = dict()
-        newObject['DataType'] = 'LightSource'
+        newObject['Datatype'] = 'LightSource'
         
         newObject['ASCIIID'] = self._readString(8)
         
@@ -1988,7 +1989,7 @@ class OpenFlight:
     def _opLightSrcPalette(self):
         # Opcode 102
         newObject = dict()
-        newObject['DataType'] = 'LightSourcePalette'
+        newObject['Datatype'] = 'LightSourcePalette'
         newObject['LightSourceIndex'] = self._readUInt()
         
         self._skip(8)
@@ -2027,7 +2028,7 @@ class OpenFlight:
     def _opBoundSphere(self):
         # Opcode 105
         newObject = dict()
-        newObject['DataType'] = 'BoundingSphere'
+        newObject['Datatype'] = 'BoundingSphere'
         
         # Skip over the reserved area
         self._skip(4)
@@ -2041,7 +2042,7 @@ class OpenFlight:
     def _opBoundCylinder(self):
         # Opcode 106
         newObject = dict()
-        newObject['DataType'] = 'BoundingCylinder'
+        newObject['Datatype'] = 'BoundingCylinder'
         
         # Skip over the reserved area
         self._skip(4)
@@ -2060,7 +2061,7 @@ class OpenFlight:
         # read functions
         self._readChunk()
         
-        newObject['DataType'] = 'BoundingConvexHull'
+        newObject['Datatype'] = 'BoundingConvexHull'
         
         newObject['NumberOfTriangles'] = self._readUInt(fromChunk = True)
         
@@ -2089,7 +2090,7 @@ class OpenFlight:
     def _opBoundVolCentre(self):
         # Opcode 108
         newObject = dict()
-        newObject['DataType'] = 'BoundingVolumeCentre'
+        newObject['Datatype'] = 'BoundingVolumeCentre'
         
         # Skip over the reserved area
         self._skip(4)
@@ -2106,7 +2107,7 @@ class OpenFlight:
     def _opBoundVolOrientation(self):
         # Opcode 109
         newObject = dict()
-        newObject['DataType'] = 'BoundingVolumeOrientation'
+        newObject['Datatype'] = 'BoundingVolumeOrientation'
         
         # Skip over the reserved area
         self._skip(4)
@@ -2122,7 +2123,7 @@ class OpenFlight:
     def _opLightPt(self):
         # Opcode 111
         newObject = dict()
-        newObject['DataType'] = 'LightPoint'
+        newObject['Datatype'] = 'LightPoint'
         newObject['ASCIIID'] = self._readString(8)
         
         varNames = ['SurfaceMaterialCode', 'FeatureID']
@@ -2179,7 +2180,7 @@ class OpenFlight:
     def _opTextureMapPalette(self):
         # Opcode 112
         newObject = dict()
-        newObject['DataType'] = 'TextureMappingPalette'
+        newObject['Datatype'] = 'TextureMappingPalette'
         
         RecordLength = self._readUShort()
         
@@ -2354,7 +2355,7 @@ class OpenFlight:
     def _opMatPalette(self):
         # Opcode 113
         newObject = dict()
-        newObject['DataType'] = "MaterialPalette"
+        newObject['Datatype'] = "MaterialPalette"
         newObject['MaterialIndex'] = self._readUInt()
         newObject['MaterialName'] = self._readString(12)
         newObject['Flags'] = self._readUInt()
@@ -2403,7 +2404,7 @@ class OpenFlight:
     def _opCAT(self):
         # Opcode 115
         newObject = dict()
-        newObject['DataType'] = "CAT"
+        newObject['Datatype'] = "CAT"
         RecordLength = self._readUShort()
         self._skip(4)
         newObject['IRColourCode'] = self._readInt()
@@ -2439,7 +2440,7 @@ class OpenFlight:
     def _opCATData(self):
         # Opcode 116
         newObject = dict()
-        newObject['DataType'] = 'CATData'
+        newObject['Datatype'] = 'CATData'
         
         RecordLength = self._readUShort()
         
@@ -2504,7 +2505,7 @@ class OpenFlight:
     def _opCurve(self):
         # Opcode 126
         newObject = dict()
-        newObject['DataType'] = 'Curve'
+        newObject['Datatype'] = 'Curve'
         
         RecordLength = self._readUShort()
         
@@ -2531,7 +2532,7 @@ class OpenFlight:
     def _opRoadConstruc(self):
         # Opcode 127
         newObject = dict()
-        newObject['DataType'] = 'RoadConstruction'
+        newObject['Datatype'] = 'RoadConstruction'
         newObject['ASCIIID'] = self._readString(8)
         
         self._skip(4)
@@ -2569,7 +2570,7 @@ class OpenFlight:
     def _opLightPtAppearPalette(self):
         # Opcode 128
         newObject = dict()
-        newObject['DataType'] = 'LightPointAppearancePalette'
+        newObject['Datatype'] = 'LightPointAppearancePalette'
         
         # Skip over reserved area
         self._skip(4)
@@ -2622,7 +2623,7 @@ class OpenFlight:
     def _opLightPtAnimatPalette(self):
         # Opcode 129
         newObject = dict()
-        newObject['DataType'] = 'LightPointAnimationPalette'
+        newObject['Datatype'] = 'LightPointAnimationPalette'
         
         RecordLength = self._readUShort()
         
@@ -2663,7 +2664,7 @@ class OpenFlight:
     def _opIdxLightPt(self):
         # Opcode 130
         newObject = dict()
-        newObject['DataType'] = 'IndexedLightPoint'
+        newObject['Datatype'] = 'IndexedLightPoint'
         
         newObject['ASCIIID'] = self._readString(8)
         
@@ -2680,7 +2681,7 @@ class OpenFlight:
     def _opLightPtSys(self):
         # Opcode 131
         newObject = dict()
-        newObject['DataType'] = 'LightPointSystem'
+        newObject['Datatype'] = 'LightPointSystem'
         newObject['ASCIIID'] = self._readString(8)
         newObject['Intensity'] = self._readFloat()
         
@@ -2698,7 +2699,7 @@ class OpenFlight:
         newObject = dict()
         
         RecordLength = self._readUShort()
-        newObject['DataType'] = 'IndexedString'
+        newObject['Datatype'] = 'IndexedString'
         newObject['Index'] = self._readUInt()
         newObject['ASCIIString'] = self._readString(RecordLength - 8)
         
@@ -2708,7 +2709,7 @@ class OpenFlight:
     def _opShaderPalette(self):
         # Opcode 133
         newObject = dict()
-        newObject['DataType'] = 'ShaderPalette'
+        newObject['Datatype'] = 'ShaderPalette'
         
         RecordLength = self._readUShort()
         newObject['ShaderIdx'] = self._readUInt()
@@ -2755,7 +2756,7 @@ class OpenFlight:
     def _opExtMatHdr(self):
         # Opcode 135
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialHeader'
+        newObject['Datatype'] = 'ExtendedMaterialHeader'
         
         newObject['MaterialIndex'] = self._readUInt()
         newObject['MaterialName'] = self._readString(12)
@@ -2771,7 +2772,7 @@ class OpenFlight:
     def _opExtMatAmb(self):
         # Opcode 136
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialAmbient'
+        newObject['Datatype'] = 'ExtendedMaterialAmbient'
         
         newObject['AmbientColour'] = np.zeros((1, 3))
         for colIdx in range(3):
@@ -2789,7 +2790,7 @@ class OpenFlight:
     def _opExtMatDif(self):
         # Opcode 137
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialDiffuse'
+        newObject['Datatype'] = 'ExtendedMaterialDiffuse'
         
         newObject['DiffuseColour'] = np.zeros((1, 3))
         for colIdx in range(3):
@@ -2807,7 +2808,7 @@ class OpenFlight:
     def _opExtMatSpc(self):
         # Opcode 138
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialSpecular'
+        newObject['Datatype'] = 'ExtendedMaterialSpecular'
         
         newObject['Shininess'] = self._readFloat()
         
@@ -2827,7 +2828,7 @@ class OpenFlight:
     def _opExtMatEms(self):
         # Opcode 139
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialEmissive'
+        newObject['Datatype'] = 'ExtendedMaterialEmissive'
         
         newObject['EmissiveColour'] = np.zeros((1, 3))
         for colIdx in range(3):
@@ -2845,7 +2846,7 @@ class OpenFlight:
     def _opExtMatAlp(self):
         # Opcode 140
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialAlpha'
+        newObject['Datatype'] = 'ExtendedMaterialAlpha'
         
         newObject['Alpha'] = self._readFloat()
         
@@ -2865,7 +2866,7 @@ class OpenFlight:
     def _opExtMatLightMap(self):
         # Opcode 141
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialLightMap'
+        newObject['Datatype'] = 'ExtendedMaterialLightMap'
         
         newObject['MaximumIntensity'] = self._readFloat()
         
@@ -2879,7 +2880,7 @@ class OpenFlight:
     def _opExtMatNormMap(self):
         # Opcode 142
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialNormalMap'
+        newObject['Datatype'] = 'ExtendedMaterialNormalMap'
         
         varNames = ['TextureIndex', 'UVSet']
         for varName in varNames:
@@ -2891,7 +2892,7 @@ class OpenFlight:
     def _opExtMatBumpMap(self):
         # Opcode 143
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialBumpMap'
+        newObject['Datatype'] = 'ExtendedMaterialBumpMap'
         
         varNames = ['TextureIndex', 'UVSet', 'TangentUVSet', 'BinormalUVSet']
         for varName in varNames:
@@ -2903,7 +2904,7 @@ class OpenFlight:
     def _opExtMatShadowMap(self):
         # Opcode 145
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialShadowMap'
+        newObject['Datatype'] = 'ExtendedMaterialShadowMap'
         
         newObject['MaximumIntensity'] = self._readFloat()
         
@@ -2917,7 +2918,7 @@ class OpenFlight:
     def _opExtMatReflMap(self):
         # Opcode 147
         newObject = dict()
-        newObject['DataType'] = 'ExtendedMaterialReflectionMap'
+        newObject['Datatype'] = 'ExtendedMaterialReflectionMap'
         
         newObject['TintColour'] = np.zeros((1, 3))
         for colIdx in range(3):
@@ -2936,7 +2937,7 @@ class OpenFlight:
     def _opExtGUIDPalette(self):
         # Opcode 148
         newObject = dict()
-        newObject['DataType'] = 'ExtensionGUIDPalette'
+        newObject['Datatype'] = 'ExtensionGUIDPalette'
         newObject['GUIDPaletteIdx'] = self._readUInt()
         
         # Documentation says that this is a 40 byte integer. I imply it's an integer (4 bytes) * 10.
@@ -2950,7 +2951,7 @@ class OpenFlight:
     def _opExtFieldBool(self):
         # Opcode 149
         newObject = dict()
-        newObject['DataType'] = 'ExtensionFieldBoolean'
+        newObject['Datatype'] = 'ExtensionFieldBoolean'
         newObject['GUIDPaletteIdx'] = self._readUInt()
         newObject['ExtensionFieldBoolean'] = self._readUInt()
         
@@ -2960,7 +2961,7 @@ class OpenFlight:
     def _opExtFieldInt(self):
         # Opcode 150
         newObject = dict()
-        newObject['DataType'] = 'ExtensionFieldInteger'
+        newObject['Datatype'] = 'ExtensionFieldInteger'
         newObject['GUIDPaletteIdx'] = self._readUInt()
         newObject['ExtensionFieldInteger'] = self._readInt()
         
@@ -2970,7 +2971,7 @@ class OpenFlight:
     def _opExtFieldFloat(self):
         # Opcode 151
         newObject = dict()
-        newObject['DataType'] = 'ExtensionFieldFloat'
+        newObject['Datatype'] = 'ExtensionFieldFloat'
         newObject['GUIDPaletteIdx'] = self._readUInt()
         newObject['ExtensionFieldFloat'] = self._readFloat()
         
@@ -2980,7 +2981,7 @@ class OpenFlight:
     def _opExtFieldDouble(self):
         # Opcode 152
         newObject = dict()
-        newObject['DataType'] = 'ExtensionFieldDouble'
+        newObject['Datatype'] = 'ExtensionFieldDouble'
         newObject['GUIDPaletteIdx'] = self._readUInt()
         newObject['ExtensionFieldDouble'] = self._readDouble()
         
@@ -2994,7 +2995,7 @@ class OpenFlight:
         # Read the data to memory and extract data as normal with modified
         # read functions
         self._readChunk()
-        newObject['DataType'] = 'ExtensionFieldString'
+        newObject['Datatype'] = 'ExtensionFieldString'
         newObject['GUIDPaletteIdx'] = self._readUInt(fromChunk = True)
         newObject['StringLength'] = self._readUInt(fromChunk = True)
         newObject['ExtensionFieldString'] = self._readString(newObject['StringLength'], fromChunk = True)
@@ -3013,7 +3014,7 @@ class OpenFlight:
         # read functions
         self._readChunk()
         
-        newObject['DataType'] = 'ExtensionFieldXMLString'
+        newObject['Datatype'] = 'ExtensionFieldXMLString'
         newObject['GUIDPaletteIdx'] = self._readUInt(fromChunk = True)
         newObject['StringLength'] = self._readUInt(fromChunk = True)
         newObject['ExtensionFieldXMLString'] = self._readString(newObject['StringLength'], fromChunk = True)
@@ -3150,7 +3151,7 @@ class OpenFlight:
         try:
             f.seek(0)
             newObject = dict()
-            newObject['DataType'] = 'TextureAttribute'
+            newObject['Datatype'] = 'TextureAttribute'
             
             varNames = ['NumberOfTexelsU', 'NumberOfTexelsV', None, None, 'xUp', 'yUp', 'FileFormatType', 'MinificationFilterType', 'MagnificationFilterType', 'WrapMethod', 'WrapMethodUV', 'WrapMethodU', 'WrapMethodV', 'ModifiedFlag', 'xPivot', 'yPivot', 'EnvironmentType', 'IntensityPattern']
             for varName in varNames:
