@@ -155,6 +155,8 @@ class OpenFlight:
         self.Records["External"] = dict()
         self.Records["Vertices"] = dict()
         self.Records["VertexList"] = []
+        self.Records["VertexUV"] = []
+        self.Records["Textures"] = []
         self._RecordType = 'Tree'
         self._TreeStack = []
         self._InstanceStack = []
@@ -163,6 +165,8 @@ class OpenFlight:
         self._parent = parent
         self._tabbing = tabbing
         self._VertexCounter = 0
+        self._TexturePatternIdx = None
+        self.Records["TexturePatterns"] = []
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -646,6 +650,9 @@ class OpenFlight:
             if newObject[varName] == -1:
                 newObject[varName] = None
         
+        # Save this variable for now. It can be collected by the vertex list command
+        self._TexturePatternIdx = newObject['TexturePatternIdx']
+        
         newObject['SurfaceMaterialCode'] = self._readShort()
         newObject['FeatureID'] = self._readShort()
         
@@ -1054,6 +1061,8 @@ class OpenFlight:
                 self._parent.Records['External'][newObject['Filename']] = self._parseTextureFile(newObject['Filename'])
         
         self._addObject(newObject)
+        # Next append to the textures list.
+        self.Records['Textures'].append(newObject)
     
     
     def _opVertexPalette(self):
@@ -1082,6 +1091,7 @@ class OpenFlight:
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
+        self.Records['VertexUV'].append(None)
         self._VertexCounter += 40
     
     
@@ -1107,6 +1117,7 @@ class OpenFlight:
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
+        self.Records['VertexUV'].append(None)
         self._VertexCounter += 56
     
     
@@ -1136,6 +1147,7 @@ class OpenFlight:
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
+        self.Records['VertexUV'].append(newObject['TextureCoordinate'])
         self._VertexCounter += 64
     
     
@@ -1159,6 +1171,7 @@ class OpenFlight:
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
+        self.Records['VertexUV'].append(newObject['TextureCoordinate'])
         self._VertexCounter += 48
     
     
@@ -1184,6 +1197,7 @@ class OpenFlight:
         
         # And keep a copy in the vertex list
         self.Records["VertexList"].append(newObject['ByteOffset'])
+        self.Records["TexturePatterns"].append(self._TexturePatternIdx)
     
     
     def _opLoD(self):
