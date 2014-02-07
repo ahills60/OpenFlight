@@ -3124,6 +3124,19 @@ class OpenFlight:
             fileName = fileName.replace('//', os.sep)
             fileName = fileName.replace('/', os.sep)
             
+            if fileName.count('.') == 1:
+                # It's possible that this hasn't been given a relative path. Check to see if this
+                # '.' denotes an extension only.
+                if fileName[-5:].count('.') == 1 and os.path.exists(os.path.dirname(self.fileName) + os.sep + fileName):
+                    fileName = os.path.dirname(self.fileName) + os.sep + fileName
+                else:
+                    print '\t' * self._tabbing + 'Problems with filename: ' + fileName
+                    # If here, the issue couldn't be resolved. Throw an error.
+                    if isTexture:
+                        raise IOError('Unable to translate texture filename with full path.')
+                    else:
+                        raise IOError('Unable to translate external reference filename with full path.')
+            
             # Lastly, check to see if the escape character should be a file separator
             if '\\' in fileName and not os.path.exists(fileName):
                 # Now check to see if converting these makes readable
@@ -3135,7 +3148,7 @@ class OpenFlight:
                     if isTexture:
                         raise IOError('Unable to translate texture filename.')
                     else:
-                        raise IOError('Unable to translate external reference filename')
+                        raise IOError('Unable to translate external reference filename.')
         
         # If here, assume that everything's (now) okay
         return fileName
@@ -3156,7 +3169,11 @@ class OpenFlight:
         # Determine if an attr file exists:
         attrFile = fileName + '.attr'
         if not os.path.exists(attrFile):
-            raise IOError('Could not find texture attribute file.')
+            # Now try to remove the previous extension and add attr extension
+            if os.path.exists(fileName[:-3] + "attr"):
+                attrFile = fileName[:-3] + "attr"
+            else:
+                raise IOError('Could not find texture attribute file.')
         
         return attrFile
     
