@@ -168,6 +168,10 @@ class OpenFlight:
         self._TexturePatternIdx = None
         self.Records["TexturePatterns"] = []
         self._SkipMissingTextures = skip_missing_textures
+        self.Records["Scale"] = []
+        self.Records["Translate"] = []
+        self._CurrentScale = np.ones((1, 3))
+        self._CurrentTranslate = np.zeros((1, 3))
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -1220,6 +1224,8 @@ class OpenFlight:
         # And keep a copy in the vertex list
         self.Records["VertexList"].append(newObject['ByteOffset'])
         self.Records["TexturePatterns"].append(self._TexturePatternIdx)
+        self.Records["Scale"].append(self._CurrentScale)
+        self.Records["Translate"].append(self._CurrentTranslate)
     
     
     def _opLoD(self):
@@ -1304,6 +1310,8 @@ class OpenFlight:
             for colIdx in range(3):
                 newObject[varName][0, colIdx] = self._readDouble()
         
+        self._CurrentTranslate = newObject['Delta']
+        
         self._addObject(newObject)
     
     
@@ -1319,8 +1327,9 @@ class OpenFlight:
             newObject['ScaleCentre'][0, colIdx] = self._readDouble()
         
         varNames = ['xScale', 'yScale', 'zScale']
-        for varName in varNames:
+        for colIdx, varName in enumerate(varNames):
             newObject[varName] = self._readFloat()
+            self._CurrentScale[0, colIdx] = newObject[varName]
         
         if self._FileFormat >= 1580:
             self._skip(4)
