@@ -455,7 +455,8 @@ class OpenFlight:
             
             newSizes = {  2:    (self._opGroup, 32, 'group'),
                          69:    (self._opVertexColNorm, 52, 'vertex with colour and normal'),
-                         70:    (self._opVertexColNormUV, 60, 'vertex with colour, normal and UV')}
+                         70:    (self._opVertexColNormUV, 60, 'vertex with colour, normal and UV'),
+                         79:    (self._opScale, 44, 'scale')}
             self._OpCodes.update(newSizes)
         
         return True
@@ -1321,7 +1322,8 @@ class OpenFlight:
         for varName in varNames:
             newObject[varName] = self._readFloat()
         
-        self._skip(4)
+        if self._FileFormat >= 1580:
+            self._skip(4)
         
         self._addObject(newObject)
     
