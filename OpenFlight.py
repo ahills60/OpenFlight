@@ -9,7 +9,7 @@ class OpenFlight:
        Version: 0.0.1
     """
     
-    def __init__(self, fileName = None, verbose = False, parent = None, tabbing = 0):
+    def __init__(self, fileName = None, verbose = False, parent = None, tabbing = 0, skip_missing_textures = False):
         self._Checks = [self._check_filesize, self._check_header]
         self._ErrorMessages = ['This file does not conform to OpenFlight standards. The file size is not a multiple of 4.',
                                'This file does not conform to OpenFlight standards. The header is incorrect.']
@@ -167,6 +167,7 @@ class OpenFlight:
         self._VertexCounter = 0
         self._TexturePatternIdx = None
         self.Records["TexturePatterns"] = []
+        self._SkipMissingTextures = skip_missing_textures
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -3133,6 +3134,8 @@ class OpenFlight:
             raise IOError('No texture filename specified.')
         
         if not os.path.exists(fileName):
+            if self._SkipMissingTextures:
+                return None
             raise IOError('Could not find texture file.')
         
         # Determine if an attr file exists:
@@ -3150,6 +3153,10 @@ class OpenFlight:
         
         # Now return a filename that we know should work
         fileName = self._checkTextureFile(fileName)
+        
+        if fileName is None:
+            # Skip reading. Return an object that states this file could not be found.
+            return "File could not be found."
         
         f = open(fileName, 'rb')
         
