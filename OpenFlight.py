@@ -453,7 +453,8 @@ class OpenFlight:
             
             # Update vertex record sizes:
             
-            newSizes = { 69:    (self._opVertexColNorm, 52, 'vertex with colour and normal'),
+            newSizes = {  2:    (self._opGroup, 32, 'group'),
+                         69:    (self._opVertexColNorm, 52, 'vertex with colour and normal'),
                          70:    (self._opVertexColNormUV, 60, 'vertex with colour, normal and UV')}
             self._OpCodes.update(newSizes)
         
@@ -609,9 +610,11 @@ class OpenFlight:
         newObject['LayerCode'] = self._readUChar()
         
         self._skip(5)
-        newObject['LoopCount'] = self._readUInt()
-        newObject['LoopDuration'] = self._readFloat()
-        newObject['LastFrameDuration'] = self._readFloat()
+        
+        if self._FileFormat >= 1580:
+            newObject['LoopCount'] = self._readUInt()
+            newObject['LoopDuration'] = self._readFloat()
+            newObject['LastFrameDuration'] = self._readFloat()
         
         # Finally inject object into tree
         self._addObject(newObject)
