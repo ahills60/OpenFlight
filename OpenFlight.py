@@ -299,11 +299,11 @@ class OpenFlight:
         print "\r" + '\t' * self._tabbing + "Read database name \"" + self.DBName + "\"\n"
         
         print '\t' * self._tabbing + "Determining file format revision number... ",
-        fileFormat = self._readInt()
+        self._FileFormat = self._readInt()
         
-        if fileFormat not in self._OpenFlightFormats:
+        if self._FileFormat not in self._OpenFlightFormats:
             raise Exception("Unrecognised OpenFlight file format revision number.")
-        print "\r" '\t' * self._tabbing + "Database is written in the " + self._OpenFlightFormats[fileFormat] + " file format.\n"
+        print "\r" '\t' * self._tabbing + "Database is written in the " + self._OpenFlightFormats[self._FileFormat] + " file format.\n"
         
         # We're not interested in the edit revision number, so skip that:
         self._skip(4)
@@ -428,7 +428,7 @@ class OpenFlight:
         self.PrimaryNodeID['Adaptive'] = self._readUShort()
         self.PrimaryNodeID['Curve'] = self._readUShort()
         
-        if fileFormat >= 1580:
+        if self._FileFormat >= 1580:
             # From 15.8, the file format has been consistent
             self.Settings['UTMZone'] = self._readUShort()
         
@@ -445,11 +445,17 @@ class OpenFlight:
         
             self.Settings['EarthMajor'] = self._readDouble()
             self.Settings['EarthMinor'] = self._readDouble()
-        elif fileFormat >= 1550:
+        elif self._FileFormat >= 1550:
             # According to the specification, there should be 2 bytes of reserved space. If this is done, then
             # the header record is not a multiple of 4 bytes. An additional 4 byte skip loses record sync and
             # no skip seems to keep the records aligned.
             self._skip(0)
+            
+            # Update vertex record sizes:
+            
+            newSizes = { 69:    (self._opVertexColNorm, 52, 'vertex with colour and normal'),
+                         70:    (self._opVertexColNormUV, 60, 'vertex with colour, normal and UV')}
+            self._OpCodes.update(newSizes)
         
         return True
         
@@ -1121,12 +1127,14 @@ class OpenFlight:
         newObject['PackedColour'] = self._readUInt()
         newObject['VertexColourIndex'] = self._readUInt()
         
-        self._skip(4)
+        if self._FileFormat >= 1580:
+            self._skip(4)
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
         self.Records['VertexUV'].append(None)
-        self._VertexCounter += 56
+        # Retrieve record size from opcode list
+        self._VertexCounter += self._OpCodes[69][1]
     
     
     def _opVertexColNormUV(self):
@@ -1151,12 +1159,14 @@ class OpenFlight:
         newObject['PackedColour'] = self._readUInt()
         newObject['VertexColourIndex'] = self._readUInt()
         
-        self._skip(4)
+        if self._FileFormat >= 1580:
+            self._skip(4)
         
         self._addObject(newObject)
         self.Records['Vertices'][self._VertexCounter] = newObject
         self.Records['VertexUV'].append(newObject['TextureCoordinate'])
-        self._VertexCounter += 64
+        # Retrieve record size from opcode list
+        self._VertexCounter += self._OpCodes[70][1]
     
     
     def _opVertexColUV(self):
