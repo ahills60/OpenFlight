@@ -288,8 +288,8 @@ class OpenFlight:
         print "\r" + '\t' * self._tabbing + "Determining record length... ",
         recordLength = self._readUShort()
         
-        if recordLength != recognisableRecordSizes[recognised.index(True)]:
-            raise Exception("Unexpected record length.")
+        # if recordLength != recognisableRecordSizes[recognised.index(True)]:
+        #     raise Exception("Unexpected record length (%i)." % recordLength)
         
         print "\r" + '\t' * self._tabbing + "Reading record name... ",
         
@@ -298,11 +298,11 @@ class OpenFlight:
         print "\r" + '\t' * self._tabbing + "Read database name \"" + self.DBName + "\"\n"
         
         print '\t' * self._tabbing + "Determining file format revision number... ",
-        iRead = self._readInt()
+        fileFormat = self._readInt()
         
-        if iRead not in self._OpenFlightFormats:
+        if fileFormat not in self._OpenFlightFormats:
             raise Exception("Unrecognised OpenFlight file format revision number.")
-        print "\r" '\t' * self._tabbing + "Database is written in the " + self._OpenFlightFormats[iRead] + " file format.\n"
+        print "\r" '\t' * self._tabbing + "Database is written in the " + self._OpenFlightFormats[fileFormat] + " file format.\n"
         
         # We're not interested in the edit revision number, so skip that:
         self._skip(4)
@@ -427,21 +427,28 @@ class OpenFlight:
         self.PrimaryNodeID['Adaptive'] = self._readUShort()
         self.PrimaryNodeID['Curve'] = self._readUShort()
         
-        self.Settings['UTMZone'] = self._readUShort()
+        if fileFormat >= 1580:
+            # From 15.8, the file format has been consistent
+            self.Settings['UTMZone'] = self._readUShort()
         
-        self._skip(6)
+            self._skip(6)
         
-        self.Settings['DBCoords']['Dz'] = self._readDouble()
-        self.Settings['DBCoords']['Radius'] = self._readDouble()
+            self.Settings['DBCoords']['Dz'] = self._readDouble()
+            self.Settings['DBCoords']['Radius'] = self._readDouble()
         
-        # More IDs
-        self.PrimaryNodeID['Mesh'] = self._readUShort()
-        self.PrimaryNodeID['LightPointSystem'] = self._readUShort()
+            # More IDs
+            self.PrimaryNodeID['Mesh'] = self._readUShort()
+            self.PrimaryNodeID['LightPointSystem'] = self._readUShort()
         
-        self._skip(4)
+            self._skip(4)
         
-        self.Settings['EarthMajor'] = self._readDouble()
-        self.Settings['EarthMinor'] = self._readDouble()
+            self.Settings['EarthMajor'] = self._readDouble()
+            self.Settings['EarthMinor'] = self._readDouble()
+        elif fileFormat >= 1550:
+            # According to the specification, there should be 2 bytes of reserved space. If this is done, then
+            # the header record is not a multiple of 4 bytes. An additional 4 byte skip loses record sync and
+            # no skip seems to keep the records aligned.
+            self._skip(0)
         
         return True
         
