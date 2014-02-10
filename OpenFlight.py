@@ -860,9 +860,10 @@ class OpenFlight:
         # Skip a reserved area
         self._skip(128)
         
-        newObject['BrightestRGB'] = np.zeros((1024, 1))
+        newObject['BrightestRGB'] = np.zeros((1024, 4))
         for rowIdx in range(1024):
-            newObject['BrightestRGB'][rowIdx, 0] = self._readUInt()
+            for colIdx in range(4):
+                newObject['BrightestRGB'][rowIdx, colIdx] = self._readUChar() # self._readUInt()
         
         if RecordLength > 4228:
             # Include colour names
