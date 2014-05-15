@@ -3131,6 +3131,7 @@ class OpenFlight:
                     return fileName.replace('\\\\', os.sep)
                 
             fileName = fileName.replace('\\\\', os.sep)
+            fileName = fileName.replace('\\', os.sep)
             fileName = fileName.replace('//', os.sep)
             fileName = fileName.replace('/', os.sep)
             
