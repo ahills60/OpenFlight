@@ -3224,7 +3224,7 @@ class OpenFlight:
             newObject = dict()
             newObject['Datatype'] = 'TextureAttribute'
             
-            varNames = ['NumberOfTexelsU', 'NumberOfTexelsV', None, None, 'xUp', 'yUp', 'FileFormatType', 'MinificationFilterType', 'MagnificationFilterType', 'WrapMethod', 'WrapMethodUV', 'WrapMethodU', 'WrapMethodV', 'ModifiedFlag', 'xPivot', 'yPivot', 'EnvironmentType', 'IntensityPattern']
+            varNames = ['NumberOfTexelsU', 'NumberOfTexelsV', None, None, 'xUp', 'yUp', 'FileFormatType', 'MinificationFilterType', 'MagnificationFilterType', 'WrapMethodUV', 'WrapMethodU', 'WrapMethodV', 'ModifiedFlag', 'xPivot', 'yPivot', 'EnvironmentType', 'IntensityPattern']
             for varName in varNames:
                 if varName is None:
                     skip(4)
