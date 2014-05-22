@@ -172,6 +172,7 @@ class OpenFlight:
         self.Records["Translate"] = []
         self._CurrentScale = np.ones((1, 3))
         self._CurrentTranslate = np.zeros((1, 3))
+        self._CurrentTransparency = None
     
     def _readString(self, size, fromChunk = False):
         if fromChunk:
@@ -680,6 +681,9 @@ class OpenFlight:
         
         newObject['IRMaterialCode'] = self._readUInt()
         newObject['Transparency'] = self._readShort()
+        
+        self._CurrentTransparency = newObject['Transparency']
+        
         newObject['LODGenerationControl'] = self._readUChar()
         newObject['LineStyleIdx'] = self._readUChar()
         
