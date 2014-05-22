@@ -1061,6 +1061,7 @@ class OpenFlight:
                 extdb.ReadFile()
                 self._parent.Records['External'][filename] = extdb.Records
                 extdb = None
+        newObject['NewFilename'] = fileName
         
         # Inject into tree
         self._addObject(newObject)
